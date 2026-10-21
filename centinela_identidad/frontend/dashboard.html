@@ -1,0 +1,1303 @@
+﻿<!-- DEMO CENTINELA — Impacto ambiental en vivo:
+     Centinela no solo hace más segura a la comunidad, también cuida al planeta:
+     cada reporte digital evita papel y emisiones de CO₂.
+     Aquí está el impacto acumulado en tiempo real. -->
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Centinela - Inicio</title>
+<script src="js/session-bridge.js"></script>
+<script src="js/ui-preferences.js"></script>
+<link rel="stylesheet" href="css/ui-shell.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        primary: '#0DF2CC',
+        'primary-dim': '#0BC4A5',
+        'bg-dark': '#0D1C19',
+        'bg-light': '#F5F8F8',
+        'surface-dark': '#152321',
+        'surface-darker': '#0F1A17',
+        'surface-light': '#FFFFFF',
+        'sidebar': '#0A1512',
+        'border-dark': '#1E3330',
+        'border-light': '#E2EAE8',
+        'text-muted': '#6B9E96',
+        'sos': '#EF4444',
+      },
+      fontFamily: {
+        sans: ['Outfit', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
+    }
+  }
+}
+</script>
+<style>
+  * { font-family: 'Outfit', sans-serif; }
+  body { background: #0D1C19; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1E3330; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #0DF2CC33; }
+
+  /* SOS pulse */
+  @keyframes sos-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+    50% { box-shadow: 0 0 0 16px rgba(239,68,68,0); }
+  }
+  .sos-pulse { animation: sos-pulse 2s infinite; }
+
+  /* Fade in */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.5s ease forwards; }
+  .fade-up-1 { animation-delay: 0.05s; opacity: 0; }
+  .fade-up-2 { animation-delay: 0.12s; opacity: 0; }
+  .fade-up-3 { animation-delay: 0.19s; opacity: 0; }
+  .fade-up-4 { animation-delay: 0.26s; opacity: 0; }
+
+  /* Nav item active */
+  .nav-item { transition: all 0.2s ease; }
+  .nav-item:hover { background: rgba(13,242,204,0.06); color: #0DF2CC; }
+  .nav-item.active { background: rgba(13,242,204,0.12); color: #0DF2CC; }
+  .nav-item.active .nav-icon { color: #0DF2CC; }
+
+  /* Card hover */
+  .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .card-hover:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(13,242,204,0.08); }
+
+  /* Primary glow */
+  .primary-glow { box-shadow: 0 4px 20px rgba(13,242,204,0.25); }
+
+  /* News card image */
+  .news-img { transition: transform 0.4s ease; }
+  .news-card:hover .news-img { transform: scale(1.04); }
+
+  /* â”€â”€ LIGHT THEME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+  html.light body { background: #EEF3F2 !important; color: #0D2B27; }
+  html.light aside { background: #E2EEEC !important; border-color: #BDD0CD !important; }
+  html.light header { background: #F8FAFA !important; border-color: #BDD0CD !important; }
+  html.light .bg-sidebar { background: #E2EEEC !important; }
+  html.light .bg-surface-darker { background: #F8FAFA !important; }
+  html.light .bg-surface-dark { background: #FFFFFF !important; }
+  html.light .border-border-dark { border-color: #BDD0CD !important; }
+  html.light .text-white { color: #0D2B27 !important; }
+  html.light .text-text-muted { color: #4D8078 !important; }
+  html.light .nav-item:hover { background: rgba(13,242,204,0.12) !important; }
+  html.light .nav-item.active { background: rgba(13,242,204,0.20) !important; color: #0D7A64 !important; }
+  html.light .nav-item.active .nav-icon { color: #0D7A64 !important; }
+  html.light #search-dropdown { background: #FFFFFF !important; border-color: #BDD0CD !important; box-shadow: 0 12px 32px rgba(0,0,0,0.10) !important; }
+  html.light .sd-item { color: #0D2B27 !important; }
+  html.light .sd-item:hover { background: rgba(13,242,204,0.10) !important; }
+  html.light .sd-empty { color: #4D8078 !important; }
+  html.light ::-webkit-scrollbar-thumb { background: #BDD0CD; }
+  html.light .prio-alta  { background: #FEE2E2 !important; color: #991B1B !important; }
+  html.light .prio-media { background: #FEF3C7 !important; color: #92400E !important; }
+  html.light .prio-baja  { background: #D1FAE5 !important; color: #065F46 !important; }
+  /* ── Eco widget en modo claro ── */
+  html.light #eco-container { background: #F0FAF8 !important; border-color: #BDD0CD !important; }
+  html.light #eco-container > div:first-child { background: linear-gradient(90deg,rgba(74,222,128,0.06),rgba(13,242,204,0.03)) !important; border-color: #BDD0CD !important; }
+  html.light #eco-container .border-border-dark { border-color: #BDD0CD !important; }
+  html.light #eco-container .text-white { color: #0D2B27 !important; }
+  html.light #eco-container [style*="color:#6B9E96"] { color: #4D8078 !important; }
+  html.light #eco-container [style*="color:#a0cfc7"] { color: #2D6A63 !important; }
+  html.light #eco-container [style*="color:#4a6b66"] { color: #4D6866 !important; }
+  html.light #eco-container [style*="color:#0DF2CC"] { color: #0A6B58 !important; }
+  html.light #eco-container [style*="color:#fff"] { color: #0D2B27 !important; }
+  html.light #eco-container #eco-hojas,
+  html.light #eco-container #eco-co2,
+  html.light #eco-container #eco-km { color: #0D2B27 !important; }
+  html.light #eco-container #eco-total { color: #0A6B58 !important; }
+  html.light #eco-container #eco-ambiental { color: #15803d !important; }
+  html.light #eco-container .font-black { color: #0D2B27 !important; }
+  /* ── Incidencias card en modo claro ── */
+  html.light #inc-stats-card { background: #F8F0EF !important; border-color: #DDBBBB !important; }
+  html.light #inc-stats-card > div:first-child { background: linear-gradient(90deg,rgba(239,68,68,0.05),rgba(13,242,204,0.02)) !important; border-color: #DDBBBB !important; }
+  html.light #inc-stats-card .border-border-dark { border-color: #DDBBBB !important; }
+  html.light #inc-stats-card .text-white { color: #1A0A0A !important; }
+  html.light #inc-stats-card [style*="color:#a0cfc7"] { color: #7A5050 !important; }
+  html.light #inc-stats-card [style*="color:#6B9E96"] { color: #7A5050 !important; }
+  html.light #inc-stats-card #chart-inc-total { color: #1A0A0A !important; }
+  html.light #inc-stats-card #inc-total { color: #1A0A0A !important; }
+</style>
+</head>
+<body class="h-screen overflow-hidden flex text-white">
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     SIDEBAR
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<aside class="w-64 bg-sidebar flex flex-col h-full border-r border-border-dark shrink-0 z-30">
+
+  <!-- Logo -->
+  <div class="h-20 flex items-center px-6 border-b border-border-dark">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                               <img src="assets/im2.jpeg" style="width: 40px; height: 40px; border-radius: 100px;">
+      </div>
+      <div>
+        <h1 class="font-bold text-xl tracking-wide text-white leading-none">Centinela</h1>
+        <p class="text-text-muted text-xs mt-0.5">Privada La Condesa</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+    <a href="dashboard.html" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">home</span>
+      Inicio
+    </a>
+    <a href="avisos.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">campaign</span>
+      Avisos
+    </a>
+    <a href="publicaciones.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">article</span>
+      Publicaciones
+    </a>
+    <a href="eventos.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">event</span>
+      Eventos
+    </a>
+    <a href="chat.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">chat_bubble_outline</span>
+      Mensajes
+    </a>
+    <a href="notificaciones.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">notifications_none</span>
+      Notificaciones
+      <span id="nav-badge-count" class="ml-auto bg-primary text-bg-dark text-xs font-bold px-1.5 py-0.5 rounded-full">0</span>
+    </a>
+    <a href="noticias.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">newspaper</span>
+      Noticias
+    </a>
+    <a href="historial.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">history</span>
+      Historial
+    </a>
+    <a href="perfil.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round nav-icon text-xl">person_outline</span>
+      Perfil
+    </a>
+
+    <!-- Admin separator -->
+    <div class="cn-nav-section">
+      <p class="cn-nav-section-label">Administración</p>
+    </div>
+    <a href="accesibilidad-modo.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium" title="Activa pánico sin tocar botones — gestos, voz o movimiento">
+      <span class="material-icons-round text-xl">accessibility_new</span>
+      Modo Accesibilidad
+    </a>
+    <a href="emergencia-contactos.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium">
+      <span class="material-icons-round text-xl">contacts</span>
+      Contactos de Emergencia
+    </a>
+  </nav>
+
+  <!-- User -->
+  <div class="p-4 border-t border-border-dark">
+    <div class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-surface-dark cursor-pointer transition-colors" onclick="location.href='perfil.html'">
+      <div class="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm" id="user-initial">M</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-white truncate" id="user-name">MULAN</p>
+        <p class="text-xs text-text-muted truncate" id="user-casa">Casa 17</p>
+      </div>
+      <button onclick="cerrarSesion(event)" class="text-text-muted hover:text-sos transition-colors" title="Cerrar sesión">
+        <span class="material-icons-round text-base">logout</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     MAIN CONTENT
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+  <!-- Header -->
+  <header class="h-20 bg-surface-darker border-b border-border-dark flex items-center justify-between px-8 shrink-0 z-20">
+    <div>
+      <h2 class="cn-page-title">¡Bienvenido!</h2>
+      <p class="cn-page-subtitle">Panel de control · Privada La Condesa</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="relative hidden md:block">
+        <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-lg">search</span>
+        <input class="pl-10 pr-4 py-2 w-56 rounded-xl bg-surface-dark border border-border-dark text-sm text-white placeholder-text-muted focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/30 transition-all" id="search-input" oninput="buscar(this.value)" placeholder="Buscar sección..."/>
+      </div>
+      <button onclick="location.href='notificaciones.html'" class="relative p-2 rounded-xl bg-surface-dark border border-border-dark hover:border-primary/30 transition-colors">
+        <span class="material-icons-round text-text-muted text-xl">notifications_none</span>
+        <span id="header-notif-dot" class="absolute top-2 right-2 w-2 h-2 bg-sos rounded-full hidden"></span>
+      </button>
+      <button onclick="toggleTheme()" class="p-2 rounded-xl bg-surface-dark border border-border-dark hover:border-primary/30 transition-colors">
+        <span class="material-icons-round text-text-muted text-xl" id="theme-icon">light_mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Scrollable content -->
+  <div class="flex-1 overflow-y-auto p-8 space-y-8">
+
+    <!-- EVENTS BANNER -->
+    <section class="fade-up fade-up-1">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Próximos eventos</h3>
+        <a href="eventos.html" class="text-primary text-sm font-semibold hover:text-primary-dim transition-colors">Ver todo →</a>
+      </div>
+      <div id="dashboard-event-card" class="relative w-full h-64 rounded-2xl overflow-hidden group cursor-pointer" onclick="location.href='eventos.html'">
+        <img id="dashboard-event-image" src="https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80" class="w-full h-full object-cover news-img" alt="Evento comunitario"/>
+        <div class="absolute inset-0 bg-gradient-to-t from-bg-dark via-bg-dark/40 to-transparent"></div>
+        <div class="absolute bottom-0 left-0 p-8">
+          <span id="dashboard-event-category" class="px-3 py-1 bg-primary text-bg-dark text-xs font-bold rounded-full uppercase tracking-wider">Cultural</span>
+          <h3 id="dashboard-event-title" class="text-3xl font-bold text-white mt-3">Festividades y celebraciones</h3>
+          <p id="dashboard-event-description" class="text-gray-300 text-sm mt-1 max-w-lg">Primavera biocultural: cuéntanos qué elementos de la biodiversidad son típicos en tu estado esta temporada.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEMBERS -->
+    <section class="fade-up fade-up-2">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Vecinos</h3>
+        <div class="flex gap-2">
+          <button id="btn-prev" onclick="prevVecinos()" class="w-8 h-8 rounded-lg bg-surface-dark border border-border-dark flex items-center justify-center hover:border-primary/30 transition-colors opacity-40 cursor-not-allowed" disabled>
+            <span class="material-icons-round text-text-muted text-sm">chevron_left</span>
+          </button>
+          <button id="btn-next" onclick="nextVecinos()" class="w-8 h-8 rounded-lg bg-surface-dark border border-border-dark flex items-center justify-center hover:border-primary/30 transition-colors">
+            <span class="material-icons-round text-text-muted text-sm">chevron_right</span>
+          </button>
+        </div>
+      </div>
+      <div class="grid grid-cols-5 gap-4" id="members-grid">
+        <!-- Generated by JS -->
+      </div>
+    </section>
+
+    <!-- INCIDENCIAS ─────────────────────────────────────────── -->
+    <section class="fade-up fade-up-3" id="section-incidencias">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <span class="material-icons-round" style="color:#EF4444">campaign</span>
+          Incidencias reportadas
+        </h3>
+        <a href="historial.html" class="text-primary text-sm font-semibold hover:text-primary-dim transition-colors">Ver todo →</a>
+      </div>
+
+      <!-- Card de resumen: números + dona -->
+      <div id="inc-stats-card" class="rounded-2xl border border-border-dark overflow-hidden mb-5" style="background:#152321">
+        <!-- Banner -->
+        <div class="px-6 py-4 border-b border-border-dark"
+             style="background:linear-gradient(90deg,rgba(239,68,68,0.06),rgba(13,242,204,0.03))">
+          <p class="font-bold text-white flex items-center gap-2">
+            <span class="material-icons-round" style="font-size:18px;color:#EF4444">security</span>
+            Resumen de reportes de la comunidad
+          </p>
+        </div>
+
+        <!-- Stats + Gráfica -->
+        <div class="flex flex-col sm:flex-row">
+          <!-- Tres métricas -->
+          <div class="flex-1 grid grid-cols-3 p-6 gap-2">
+            <div class="flex flex-col items-center text-center px-2 border-r border-border-dark">
+              <span class="material-icons-round mb-1" style="font-size:22px;color:#6B9E96">folder_open</span>
+              <p class="font-black text-white tabular-nums" style="font-size:2rem;line-height:1.1" id="inc-total">—</p>
+              <p class="text-xs font-semibold mt-1" style="color:#a0cfc7">Total reportes</p>
+            </div>
+            <div class="flex flex-col items-center text-center px-2 border-r border-border-dark">
+              <span class="material-icons-round mb-1" style="font-size:22px;color:#EF4444">local_police</span>
+              <p class="font-black tabular-nums" style="font-size:2rem;line-height:1.1;color:#EF4444" id="inc-seguridad">—</p>
+              <p class="text-xs font-semibold mt-1" style="color:#a0cfc7">Seguridad</p>
+            </div>
+            <div class="flex flex-col items-center text-center px-2">
+              <span class="material-icons-round mb-1" style="font-size:22px;color:#4ade80">eco</span>
+              <p class="font-black tabular-nums" style="font-size:2rem;line-height:1.1;color:#4ade80" id="inc-ambiental">—</p>
+              <p class="text-xs font-semibold mt-1" style="color:#a0cfc7">Ambiental</p>
+            </div>
+          </div>
+
+          <!-- Gráfica dona -->
+          <div class="border-t sm:border-t-0 sm:border-l border-border-dark px-6 py-5 flex flex-col items-center justify-center shrink-0">
+            <p class="text-xs font-semibold mb-3" style="color:#a0cfc7">Reportes por categoría</p>
+            <div class="relative" style="width:160px;height:160px">
+              <canvas id="chart-inc-dona"></canvas>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span class="font-black tabular-nums text-white" style="font-size:1.4rem" id="chart-inc-total">—</span>
+                <span class="text-xs" style="color:#6B9E96">reportes</span>
+              </div>
+            </div>
+            <div class="flex gap-4 mt-2 text-xs" style="color:#6B9E96">
+              <span class="flex items-center gap-1.5">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#EF4444"></span>Seguridad
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4ade80"></span>Ambiental
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Últimas 3 incidencias -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="incidencias-grid">
+        <!-- Cargado por JS -->
+      </div>
+    </section>
+    <!-- /INCIDENCIAS ─────────────────────────────────────────── -->
+
+    <!-- IMPACTO AMBIENTAL ─────────────────────────────────────────── -->
+    <section class="fade-up fade-up-4" id="section-impacto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <span class="material-icons-round" style="color:#4ade80">eco</span>
+          Impacto ambiental de Centinela
+        </h3>
+        <span id="eco-last-update" class="text-xs" style="color:#6B9E96"></span>
+      </div>
+      <div id="eco-container" class="rounded-2xl border border-border-dark overflow-hidden" style="background:#152321">
+        <!-- Banner superior -->
+        <div class="px-6 py-4 border-b border-border-dark flex items-start gap-4"
+             style="background:linear-gradient(90deg,rgba(74,222,128,0.08),rgba(13,242,204,0.05))">
+          <span class="material-icons-round shrink-0 mt-0.5" style="font-size:34px;color:#4ade80">park</span>
+          <div>
+            <p class="font-bold text-white"><span class="material-icons-round" style="font-size:18px;vertical-align:middle;color:#4ade80;margin-right:4px">public</span> Reportes digitales = planeta más verde</p>
+            <p class="text-sm mt-1 leading-relaxed" style="color:#6B9E96">
+              Llevamos <span id="eco-total" class="font-bold" style="color:#0DF2CC">—</span>
+              reportes digitales acumulados. Aquí el impacto en tiempo real.
+            </p>
+          </div>
+        </div>
+        <!-- 3 métricas con count-up -->
+        <div class="grid grid-cols-1 sm:grid-cols-3">
+          <div class="p-6 flex flex-col items-center text-center border-b sm:border-b-0 sm:border-r border-border-dark">
+            <span class="material-icons-round mb-2" style="font-size:32px;color:#4ade80">description</span>
+            <p class="font-black text-white tabular-nums" style="font-size:2.5rem;line-height:1.1" id="eco-hojas">0</p>
+            <p class="text-sm font-semibold mt-2" style="color:#a0cfc7">Hojas de papel evitadas</p>
+            <p class="text-xs mt-1" style="color:#4a6b66">3 hojas × reporte</p>
+          </div>
+          <div class="p-6 flex flex-col items-center text-center border-b sm:border-b-0 sm:border-r border-border-dark">
+            <span class="material-icons-round mb-2" style="font-size:32px;color:#0DF2CC">air</span>
+            <p class="font-black text-white tabular-nums" style="font-size:2.5rem;line-height:1.1">
+              <span id="eco-co2">0.00</span><span class="font-bold" style="font-size:1.1rem;color:#6B9E96"> kg</span>
+            </p>
+            <p class="text-sm font-semibold mt-2" style="color:#a0cfc7">CO₂ no emitido</p>
+            <p class="text-xs mt-1" style="color:#4a6b66">0.015 kg × reporte</p>
+          </div>
+          <div class="p-6 flex flex-col items-center text-center">
+            <span class="material-icons-round mb-2" style="font-size:32px;color:#fbbf24">directions_car</span>
+            <p class="font-black text-white tabular-nums" style="font-size:2.5rem;line-height:1.1" id="eco-km">0.0</p>
+            <p class="text-sm font-semibold mt-2" style="color:#a0cfc7">km en auto no recorridos</p>
+            <p class="text-xs mt-1" style="color:#4a6b66">÷ 0.12 kg CO₂/km</p>
+          </div>
+        </div>
+        <!-- Desglose ambiental -->
+        <div class="px-6 py-3 border-t border-border-dark flex items-center gap-2 text-sm" style="color:#6B9E96">
+          <span class="material-icons-round" style="font-size:16px;color:#4ade80">eco</span>
+          Incluye <span id="eco-ambiental" class="font-bold mx-1" style="color:#4ade80">—</span> reportes ambientales
+        </div>
+        <!-- Gráficas Chart.js ───────────────────────────────────── -->
+        <div id="eco-charts" class="px-6 pb-6 pt-5 border-t border-border-dark">
+          <!-- Gráfica: Impacto ambiental acumulado (barras) -->
+          <div class="flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <p class="text-sm font-semibold" style="color:#a0cfc7">Impacto ambiental acumulado</p>
+              <div class="flex gap-4 text-xs" style="color:#6B9E96">
+                <span class="flex items-center gap-1.5">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#4ade80"></span>Hojas
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#0DF2CC"></span>CO₂ (g)
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#fbbf24"></span>km ×10
+                </span>
+              </div>
+            </div>
+            <div style="position:relative;height:160px">
+              <canvas id="chart-barras"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- /IMPACTO AMBIENTAL ─────────────────────────────────────────── -->
+
+    <!-- REPORTES POR SEMANA ──────────────────────────────────────── -->
+    <section class="fade-up fade-up-4" id="section-semanas">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <span class="material-icons-round" style="color:#0DF2CC">bar_chart</span>
+          Reportes por semana
+        </h3>
+        <span id="semana-last-update" class="text-xs" style="color:#6B9E96"></span>
+      </div>
+      <div class="rounded-2xl border border-border-dark overflow-hidden" style="background:#152321">
+        <div class="px-6 py-4 border-b border-border-dark"
+             style="background:linear-gradient(90deg,rgba(13,242,204,0.06),rgba(74,222,128,0.03))">
+          <p class="font-bold text-white flex items-center gap-2">
+            <span class="material-icons-round" style="font-size:18px;color:#0DF2CC">timeline</span>
+            Evolución semanal de incidencias
+          </p>
+          <p class="text-sm mt-1" style="color:#6B9E96">Últimas 8 semanas — seguridad vs ambiental</p>
+        </div>
+        <div class="px-6 py-5">
+          <div class="flex gap-4 text-xs mb-4" style="color:#6B9E96">
+            <span class="flex items-center gap-1.5">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#EF4444"></span>Seguridad
+            </span>
+            <span class="flex items-center gap-1.5">
+              <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#4ade80"></span>Ambiental
+            </span>
+          </div>
+          <div id="semana-chart-wrap" style="position:relative;height:200px">
+            <canvas id="chart-semana"></canvas>
+          </div>
+          <p id="semana-error" style="display:none;color:#6B9E96;font-size:12px;text-align:center;margin-top:8px;padding:4px 0"></p>
+        </div>
+      </div>
+    </section>
+    <!-- /REPORTES POR SEMANA ─────────────────────────────────────── -->
+
+    <!-- PUBLICACIONES -->
+    <section class="fade-up fade-up-4" id="section-publicaciones">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">Publicaciones recientes</h3>
+        <a href="publicaciones.html" class="text-primary text-sm font-semibold hover:text-primary-dim transition-colors">Ver todo →</a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="publicaciones-grid">
+        <!-- Cargado por JS -->
+      </div>
+    </section>
+
+    <!-- Bottom padding -->
+    <div class="h-20"></div>
+  </div>
+</div>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     SOS BUTTON
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<button onclick="location.href='panico.html'"
+  class="sos-pulse fixed bottom-8 right-8 z-50 w-16 h-16 bg-sos rounded-full flex flex-col items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform border-4 border-red-400">
+  <span class="material-icons-round text-white text-2xl">emergency</span>
+  <span class="text-white text-[9px] font-black uppercase tracking-wider">SOS</span>
+</button>
+
+<script>
+// â”€â”€ Recibir token desde URL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const params = new URLSearchParams(window.location.search)
+if (params.get('token')) {
+  localStorage.setItem('token', params.get('token'))
+  localStorage.setItem('usuarioActual', params.get('usuario') || 'Vecino')
+  localStorage.setItem('nombre', params.get('usuario') || 'Vecino')
+  if (params.get('casa')) localStorage.setItem('numeroCasa', params.get('casa'))
+  window.history.replaceState({}, '', '/dashboard.html')
+}
+
+// Sesión
+const token = localStorage.getItem('token')
+const nombre = localStorage.getItem('usuarioActual') || localStorage.getItem('nombre') || 'Vecino'
+const casa = localStorage.getItem('numeroCasa') || ''
+const runtime = window.CentinelaRuntime
+const LOGIN_URL = runtime ? runtime.appUrl('login.html') : 'http://localhost:9300/login.html'
+const IDENTITY_API = runtime ? runtime.serviceUrl(9000) : 'http://localhost:9000'
+const POSTS_API = runtime ? runtime.serviceUrl(9002) : 'http://localhost:9002'
+const INCIDENTS_API = runtime ? runtime.serviceUrl(9001) : 'http://localhost:9001'
+if (!token) window.location.href = LOGIN_URL
+
+document.getElementById('user-name').textContent = nombre
+document.getElementById('user-casa').textContent = casa || 'Centinela'
+document.getElementById('user-initial').textContent = nombre.charAt(0).toUpperCase()
+
+// â”€â”€ Buscador â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const colores = {
+  'avisos':          { icon: 'campaign',       color: '#EF4444' },
+  'publicaciones':   { icon: 'article',        color: '#0DF2CC' },
+  'eventos':         { icon: 'event',          color: '#F59E0B' },
+  'chat':            { icon: 'chat_bubble',    color: '#3B82F6' },
+  'notificaciones':  { icon: 'notifications',  color: '#8B5CF6' },
+  'noticias':        { icon: 'newspaper',      color: '#10B981' },
+  'historial':       { icon: 'history',        color: '#6B7280' },
+  'perfil':          { icon: 'person',         color: '#0DF2CC' },
+  'admin':           { icon: 'shield',         color: '#F59E0B' },
+}
+
+const secciones = [
+  { label: 'Avisos',         keywords: 'avisos incidencias reportes emergencias seguridad alerta',      url: 'avisos.html' },
+  { label: 'Publicaciones',  keywords: 'publicaciones tablón posts comunidad anuncios avisos',           url: 'publicaciones.html' },
+  { label: 'Eventos',        keywords: 'eventos culturales actividades calendario reunión fiesta',        url: 'eventos.html' },
+  { label: 'Mensajes',       keywords: 'mensajes chat conversaciones hablar vecinos privado',           url: 'chat.html' },
+  { label: 'Notificaciones', keywords: 'notificaciones alertas novedades avisos nuevos',                url: 'notificaciones.html' },
+  { label: 'Noticias',       keywords: 'noticias recientes actualidad colonia información',              url: 'noticias.html' },
+  { label: 'Historial',      keywords: 'historial visitados recientes anteriores',                      url: 'historial.html' },
+  { label: 'Perfil',         keywords: 'perfil usuario cuenta datos personales nombre casa',            url: 'perfil.html' },
+  { label: 'Panel Admin',    keywords: 'admin administrador panel seguridad vecinos registrados mapa',  url: 'admin.html' },
+]
+
+// Inyectar estilos del dropdown
+const style = document.createElement('style')
+style.textContent = `
+  #search-wrap { position: relative; }
+  #search-dropdown {
+    position: absolute; top: calc(100% + 8px); left: 0;
+    width: 100%; min-width: 240px;
+    background: #152321; border: 1px solid #1E3330;
+    border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    z-index: 9999; overflow: hidden; display: none;
+  }
+  #search-dropdown.show { display: block; }
+  .sd-item { padding: 10px 16px; color: #fff; font-size: 13px;
+    cursor: pointer; display: flex; align-items: center; gap: 10px;
+    transition: background .15s; }
+  .sd-item:hover { background: rgba(13,242,204,0.08); }
+  .sd-empty { padding: 12px 16px; color: #6B9E96; font-size: 13px; }
+`
+document.head.appendChild(style)
+
+// Crear wrapper y dropdown
+const searchInput = document.getElementById('search-input')
+const wrap = document.createElement('div')
+wrap.id = 'search-wrap'
+searchInput.parentNode.insertBefore(wrap, searchInput)
+wrap.appendChild(searchInput)
+
+const dropdown = document.createElement('div')
+dropdown.id = 'search-dropdown'
+wrap.appendChild(dropdown)
+
+function renderDropdown(lista, query) {
+  dropdown.innerHTML = ''
+  if (lista.length === 0) {
+    dropdown.innerHTML = `<div class="sd-empty">Sin resultados para "${query}"</div>`
+  } else {
+    lista.forEach(r => {
+      const key = r.url.replace('.html', '')
+      const c = colores[key] || { icon: 'arrow_forward', color: '#0DF2CC' }
+      const div = document.createElement('div')
+      div.className = 'sd-item'
+      div.innerHTML = `<span class="material-icons-round" style="color:${c.color};font-size:18px">${c.icon}</span>${r.label}`
+      div.onclick = () => location.href = r.url
+      dropdown.appendChild(div)
+    })
+  }
+  dropdown.classList.add('show')
+}
+
+searchInput.addEventListener('focus', () => {
+  if (!searchInput.value.trim()) renderDropdown(secciones, '')
+})
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase()
+  if (!q) { renderDropdown(secciones, ''); return }
+  const resultados = secciones.filter(s =>
+    s.label.toLowerCase().includes(q) || s.keywords.toLowerCase().includes(q)
+  )
+  renderDropdown(resultados, searchInput.value)
+})
+
+document.addEventListener('click', (e) => {
+  if (!wrap.contains(e.target)) dropdown.classList.remove('show')
+})
+
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { dropdown.classList.remove('show'); searchInput.value = '' }
+})
+
+// â”€â”€ Colores para avatares de vecinos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const avatarColors = [
+  '#0DF2CC','#3B82F6','#F59E0B','#EF4444','#8B5CF6',
+  '#10B981','#F97316','#EC4899','#6366F1','#14B8A6'
+]
+
+// â”€â”€ Carrusel de vecinos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const grid = document.getElementById('members-grid')
+let allVecinos = []
+let carouselIdx = 0
+const VISIBLE = 5
+
+function renderVecinos(lista) {
+  if (!lista.length) {
+    grid.innerHTML = `<div class="col-span-full text-sm text-text-muted bg-surface-dark border border-border-dark rounded-2xl p-5">Aún no hay vecinos registrados para mostrar.</div>`
+    return
+  }
+  grid.innerHTML = lista.map((v, i) => {
+    const idx = (carouselIdx + i) % avatarColors.length
+    const inicial = (v.nombre || '?').charAt(0).toUpperCase()
+    const color = avatarColors[idx % avatarColors.length]
+    const nombreSeguro = (v.nombre || '').replace(/'/g, '&#39;')
+    return `
+      <div onclick="abrirChatPrivado('${nombreSeguro}')"
+           class="flex flex-col items-center gap-2 group cursor-pointer" title="Chatear con ${v.nombre}">
+        <div class="w-14 h-14 rounded-full border-2 transition-all overflow-hidden flex items-center justify-center relative"
+             style="background:${color}22; border-color:${color}44">
+          <span class="font-black text-xl" style="color:${color}">${inicial}</span>
+          <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100
+               transition-opacity" style="background:${color}55">
+            <span class="material-icons-round text-white text-lg">chat_bubble</span>
+          </div>
+        </div>
+        <span class="text-sm font-semibold text-white truncate max-w-[80px] text-center leading-tight">${(v.alias || v.nombre || '').split(' ')[0]}</span>
+        <span class="text-xs text-text-muted">${v.casa || ''}</span>
+      </div>`
+  }).join('')
+}
+
+function actualizarCarrusel() {
+  const pagina = allVecinos.slice(carouselIdx, carouselIdx + VISIBLE)
+  renderVecinos(pagina)
+  const btnPrev = document.getElementById('btn-prev')
+  const btnNext = document.getElementById('btn-next')
+  if (carouselIdx <= 0) {
+    btnPrev.disabled = true; btnPrev.classList.add('opacity-40','cursor-not-allowed')
+  } else {
+    btnPrev.disabled = false; btnPrev.classList.remove('opacity-40','cursor-not-allowed')
+  }
+  if (carouselIdx + VISIBLE >= allVecinos.length) {
+    btnNext.disabled = true; btnNext.classList.add('opacity-40','cursor-not-allowed')
+  } else {
+    btnNext.disabled = false; btnNext.classList.remove('opacity-40','cursor-not-allowed')
+  }
+}
+
+function prevVecinos() {
+  if (carouselIdx > 0) { carouselIdx = Math.max(0, carouselIdx - VISIBLE); actualizarCarrusel() }
+}
+function nextVecinos() {
+  if (carouselIdx + VISIBLE < allVecinos.length) { carouselIdx = Math.min(allVecinos.length - VISIBLE, carouselIdx + VISIBLE); actualizarCarrusel() }
+}
+
+async function cargarVecinos() {
+  try {
+    const res = await fetch(`${IDENTITY_API}/api/admin/usuarios/`)
+    if (res.ok) {
+      const usuarios = await res.json()
+      const registrados = usuarios
+        .filter(u => u.activo !== false)
+        .map(u => {
+          const nombreCompleto = u.nombre_completo || 'Vecino'
+          const esActual = nombreCompleto.toLowerCase() === nombre.toLowerCase()
+          return {
+            nombre: nombreCompleto,
+            alias: esActual ? 'Tú' : nombreCompleto,
+            casa: u.casa || ''
+          }
+        })
+      if (registrados.length > 0) { allVecinos = registrados; actualizarCarrusel(); return }
+    }
+  } catch(e) {}
+
+  allVecinos = []
+  actualizarCarrusel()
+}
+
+// â”€â”€ Abrir chat privado â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function abrirChatPrivado(nombreVecino) {
+  localStorage.setItem('chatPrivadoCon', nombreVecino)
+  location.href = 'chat.html'
+}
+
+// Cerrar sesión
+function cerrarSesion(e) {
+  e.stopPropagation()
+  localStorage.clear()
+  window.location.href = LOGIN_URL
+}
+
+cargarVecinos()
+
+async function cargarBadgeNotificaciones() {
+  try {
+    const res = await fetch(`${POSTS_API}/notifications`, {
+      headers: { 'Authorization': `Token ${token}` }
+    })
+    if (!res.ok) return
+
+    const data = await res.json()
+    const total = Number(data.unread_count || 0)
+    const badge = document.getElementById('nav-badge-count')
+    const dot = document.getElementById('header-notif-dot')
+
+    if (badge) {
+      badge.textContent = `${total}`
+      if (total <= 0) {
+        badge.classList.add('hidden')
+      } else {
+        badge.classList.remove('hidden')
+      }
+    }
+
+    if (dot) {
+      if (total <= 0) {
+        dot.classList.add('hidden')
+      } else {
+        dot.classList.remove('hidden')
+      }
+    }
+  } catch (e) {}
+}
+
+async function cargarEventoPrincipal() {
+  try {
+    const res = await fetch(`${POSTS_API}/events`, {
+      headers: { 'Authorization': `Token ${token}` }
+    })
+    if (!res.ok) return
+    const eventos = await res.json()
+    const aprobados = Array.isArray(eventos)
+      ? eventos.filter((evento) => evento.status === 'approved')
+      : []
+    if (!aprobados.length) return
+
+    const destacado = aprobados[0]
+    const categoria = document.getElementById('dashboard-event-category')
+    const titulo = document.getElementById('dashboard-event-title')
+    const descripcion = document.getElementById('dashboard-event-description')
+    const imagen = document.getElementById('dashboard-event-image')
+
+    if (categoria) categoria.textContent = destacado.categoria || 'Comunitario'
+    if (titulo) titulo.textContent = destacado.titulo || 'Evento de la comunidad'
+    if (descripcion) {
+      descripcion.textContent = destacado.descripcion || `${destacado.autor || 'Un vecino'} organizó una actividad para la comunidad.`
+    }
+    if (imagen) {
+      const imagenesPorCategoria = {
+        'Cultural': 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80',
+        'Deportivo': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1200&q=80',
+        'Seguridad': 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?w=1200&q=80',
+        'Educativo': 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80',
+        'Comunitario': 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1200&q=80'
+      }
+      imagen.src = imagenesPorCategoria[destacado.categoria] || imagenesPorCategoria['Comunitario']
+    }
+  } catch (e) {}
+}
+
+// â”€â”€ Incidencias â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const prioConfig = {
+  'critica':  { label: 'Crítica', bg: '#EF4444', text: '#fff' },
+  'alta':     { label: 'Alta',    bg: '#EF4444', text: '#fff' },
+  'media':    { label: 'Media',   bg: '#F59E0B', text: '#fff' },
+  'baja':     { label: 'Baja',    bg: '#10B981', text: '#fff' },
+}
+
+function renderIncidenciasFallback() {
+  const demo = [
+    { titulo: 'Robo a vehículo',        descripcion: 'Robo de autopartes en estacionamiento norte.', prioridad: 'alta',  fecha: 'Hace 1 hora' },
+    { titulo: 'Falla en alumbrado',     descripcion: 'Luminaria apagada en calle principal, zona 3.', prioridad: 'media', fecha: 'Hace 3 horas' },
+    { titulo: 'Persona sospechosa',     descripcion: 'Individuo merodeando en acceso peatonal sur.', prioridad: 'baja',  fecha: 'Ayer' },
+  ]
+  renderIncidencias(demo)
+}
+
+function renderIncidencias(lista) {
+  const grid = document.getElementById('incidencias-grid')
+  const prioridadOrden = { 'critica': 0, 'crítica': 0, 'alta': 1, 'media': 2, 'baja': 3 }
+  const ordenadas = [...lista].sort((a, b) => {
+    const pa = prioridadOrden[(a.prioridad || 'baja').toLowerCase()] ?? 9
+    const pb = prioridadOrden[(b.prioridad || 'baja').toLowerCase()] ?? 9
+    if (pa !== pb) return pa - pb
+    return String(b.fecha || b.created_at || '').localeCompare(String(a.fecha || a.created_at || ''))
+  })
+  grid.innerHTML = ordenadas.slice(0, 3).map(inc => {
+    const p = (inc.prioridad || 'baja').toLowerCase()
+    const cfg = prioConfig[p] || prioConfig['baja']
+    const desc = (inc.descripcion || inc.detalle || '').substring(0, 90)
+    let imagenes = []
+    try { imagenes = JSON.parse(inc.imagenes || '[]') } catch (e) {}
+    return `
+      <article class="bg-surface-dark rounded-2xl border border-border-dark card-hover cursor-pointer p-5"
+               onclick="location.href='avisos.html'">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold px-2.5 py-1 rounded-full prio-${p}"
+                style="background:${cfg.bg}22; color:${cfg.bg}">${cfg.label}</span>
+          <span class="text-text-muted text-xs">${inc.fecha || inc.created_at || ''}</span>
+        </div>
+        ${imagenes[0] ? `<div class="h-36 rounded-2xl overflow-hidden mb-4 border border-border-dark"><img src="${imagenes[0]}" class="w-full h-full object-cover"/></div>` : ''}
+        <h4 class="font-bold text-white mb-1 leading-snug">${inc.titulo || inc.tipo || 'Incidencia'}</h4>
+        <p class="text-text-muted text-sm line-clamp-2">${desc}${desc.length >= 90 ? '...' : ''}</p>
+        <button class="mt-3 text-primary text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+          Ver detalle <span class="material-icons-round text-sm">arrow_forward</span>
+        </button>
+      </article>`
+  }).join('')
+}
+
+async function cargarIncidencias() {
+  try {
+    const res = await fetch(`${INCIDENTS_API}/api/consultar_incidencias?rol=usuario`)
+    if (res.ok) {
+      const text = await res.text()
+      const xml = new DOMParser().parseFromString(text, 'text/xml')
+      const items = xml.getElementsByTagName('incidencia')
+      const lista = []
+      for (let i = 0; i < items.length; i++) {
+        const g = (tag) => items[i].getElementsByTagName(tag)[0]?.textContent || ''
+        lista.push({
+          titulo: g('tipo') || g('categoria') || 'Incidencia',
+          descripcion: g('descripcion'),
+          prioridad: g('prioridad') || 'Baja',
+          fecha: `${g('fecha')} ${g('hora')}`.trim(),
+          imagenes: g('imagenes'),
+          estado: g('estado')
+        })
+      }
+      if (lista.length > 0) { renderIncidencias(lista); return }
+    }
+  } catch(e) {}
+  renderIncidenciasFallback()
+}
+
+// â”€â”€ Publicaciones â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function renderPublicacionesFallback() {
+  const demo = [
+    { autor: 'Carlos M.',  contenido: 'Recordatorio: junta de vecinos el próximo viernes 7pm en el salón principal.', created_at: 'Hace 2 horas' },
+    { autor: 'Laura S.',   contenido: 'Perdí a mi gato gris con collar azul en la zona del parque. Cualquier info al 5522334455.', created_at: 'Hace 5 horas' },
+    { autor: 'Administración', contenido: 'Se suspende el servicio de agua el martes de 8 a 12hrs por mantenimiento de red.', created_at: 'Ayer' },
+  ]
+  renderPublicaciones(demo)
+}
+
+function renderPublicaciones(lista) {
+  const grid = document.getElementById('publicaciones-grid')
+  grid.innerHTML = lista.slice(0, 3).map(pub => {
+    const autor = pub.autor || pub.nombre_usuario || pub.username || 'Vecino'
+    const inicial = autor.charAt(0).toUpperCase()
+    const contenido = (pub.contenido || pub.texto || pub.body || '').substring(0, 100)
+    const fecha = pub.created_at || pub.fecha || ''
+    return `
+      <article class="bg-surface-dark rounded-2xl border border-border-dark card-hover cursor-pointer p-5"
+               onclick="location.href='publicaciones.html'">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center text-primary font-bold text-sm shrink-0">${inicial}</div>
+          <div>
+            <p class="text-sm font-semibold text-white leading-none">${autor}</p>
+            <p class="text-xs text-text-muted mt-0.5">${fecha}</p>
+          </div>
+        </div>
+        <p class="text-text-muted text-sm line-clamp-3">${contenido}${contenido.length >= 100 ? '...' : ''}</p>
+        <button class="mt-3 text-primary text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all">
+          Ver publicación <span class="material-icons-round text-sm">arrow_forward</span>
+        </button>
+      </article>`
+  }).join('')
+}
+
+async function cargarPublicaciones() {
+  try {
+    const res = await fetch(`${POSTS_API}/posts`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      const lista = Array.isArray(data) ? data : (data.posts || data.data || [])
+      if (lista.length > 0) { renderPublicaciones(lista); return }
+    }
+  } catch(e) {}
+  renderPublicacionesFallback()
+}
+
+// ── Chart.js — instancias globales (se destruyen en cada refresh) ───────────
+let _ecoChartDona   = null   // reservado (no usado en eco, sí en incidencias)
+let _ecoChartBarras = null
+let _incChart       = null
+
+// ── Dona de incidencias (Seguridad vs Ambiental) ─────────────────────────────
+function renderIncChart(total, ambiental) {
+  if (typeof Chart === 'undefined') return
+  const seguridad = Math.max(0, total - ambiental)
+  const ctx = document.getElementById('chart-inc-dona')
+  if (!ctx) return
+
+  if (_incChart) { _incChart.destroy(); _incChart = null }
+
+  const isLight  = document.documentElement.classList.contains('light')
+  const tooltipBg     = isLight ? '#F8FAFA' : '#0F1A17'
+  const tooltipBorder = isLight ? '#DDBBBB' : '#1E3330'
+  const tooltipTitle  = isLight ? '#7A1A1A' : '#EF4444'
+  const tooltipBody   = isLight ? '#7A5050' : '#a0cfc7'
+  const borderClr     = isLight ? '#F8F0EF' : '#152321'
+
+  const hasData = total > 0
+
+  // Estado vacío: mostrar overlay "Sin datos aún"
+  const overlay = document.getElementById('_inc-empty-overlay')
+  if (!hasData) {
+    if (!overlay) {
+      const wrap = ctx.parentElement
+      const el = document.createElement('div')
+      el.id = '_inc-empty-overlay'
+      el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;pointer-events:none;'
+      el.style.color = isLight ? '#7A5050' : '#6B9E96'
+      el.textContent = 'Sin datos aún'
+      wrap.appendChild(el)
+    }
+  } else {
+    if (overlay) overlay.remove()
+  }
+
+  _incChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Seguridad', 'Ambiental'],
+      datasets: [{
+        data: hasData ? [seguridad, ambiental] : [1, 0],
+        backgroundColor: hasData
+          ? ['rgba(239,68,68,0.85)', 'rgba(74,222,128,0.85)']
+          : [isLight ? '#DDBBBB' : '#1E3330', 'transparent'],
+        borderColor: borderClr,
+        borderWidth: 3,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          enabled: hasData,
+          callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} reportes` },
+          backgroundColor: tooltipBg, borderColor: tooltipBorder, borderWidth: 1,
+          titleColor: tooltipTitle, bodyColor: tooltipBody, padding: 10,
+        }
+      },
+      animation: { animateRotate: true, duration: 900 }
+    }
+  })
+
+  const elCenter = document.getElementById('chart-inc-total')
+  if (elCenter) elCenter.textContent = hasData ? total.toLocaleString('es-MX') : '—'
+}
+
+// ── Barras de impacto ambiental (hojas / CO₂ / km) ──────────────────────────
+function renderEcoCharts(total, totalAmbiental) {
+  if (typeof Chart === 'undefined') return
+  const isLight = document.documentElement.classList.contains('light')
+  const tickColor   = isLight ? '#4D8078' : '#a0cfc7'
+  const gridColor   = isLight ? 'rgba(189,208,205,0.5)' : 'rgba(30,51,48,0.6)'
+  const tooltipBg   = isLight ? '#F8FAFA' : '#0F1A17'
+  const tooltipBorder = isLight ? '#BDD0CD' : '#1E3330'
+  const tooltipTitle  = isLight ? '#0D7A64' : '#0DF2CC'
+  const tooltipBody   = isLight ? '#4D8078' : '#a0cfc7'
+
+  // Barras: hojas | CO₂ (g) | km ×10  — escalados para ser comparables
+  const ctxBarras = document.getElementById('chart-barras')
+  if (ctxBarras) {
+    if (_ecoChartBarras) { _ecoChartBarras.destroy(); _ecoChartBarras = null }
+
+    const hojas  = total * HOJAS_POR_REPORTE                        // e.g. 30
+    const co2g   = total * CO2_POR_REPORTE_KG * 1000                // kg → g, e.g. 150
+    const kmX10  = (total * CO2_POR_REPORTE_KG / CO2_KM_AUTO) * 10 // km×10, e.g. 12.5
+
+    const hasData = total > 0
+
+    // Overlay "Sin datos aún" si no hay reportes
+    const wrap = ctxBarras.parentElement
+    const emptyEl = document.getElementById('_eco-empty-overlay')
+    if (!hasData) {
+      if (!emptyEl) {
+        const el = document.createElement('div')
+        el.id = '_eco-empty-overlay'
+        el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;pointer-events:none;'
+        el.style.color = isLight ? '#4D8078' : '#6B9E96'
+        el.textContent = 'Sin datos aún'
+        wrap.style.position = 'relative'
+        wrap.appendChild(el)
+      }
+    } else {
+      if (emptyEl) emptyEl.remove()
+    }
+
+    _ecoChartBarras = new Chart(ctxBarras, {
+      type: 'bar',
+      data: {
+        labels: ['Hojas ahorradas', 'CO₂ evitado (g)', 'km equiv. ×10'],
+        datasets: [{
+          data: hasData ? [hojas, co2g, kmX10] : [0, 0, 0],
+          backgroundColor: [
+            'rgba(74,222,128,0.20)',
+            'rgba(13,242,204,0.20)',
+            'rgba(251,191,36,0.20)',
+          ],
+          borderColor: ['#4ade80', '#0DF2CC', '#fbbf24'],
+          borderWidth: 2,
+          borderRadius: 8,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const i = ctx.dataIndex
+                const t = total
+                const vals = [
+                  ` ${(t * HOJAS_POR_REPORTE).toFixed(0)} hojas de papel`,
+                  ` ${(t * CO2_POR_REPORTE_KG * 1000).toFixed(1)} g CO₂ (≈ ${(t * CO2_POR_REPORTE_KG).toFixed(3)} kg)`,
+                  ` ${(t * CO2_POR_REPORTE_KG / CO2_KM_AUTO).toFixed(2)} km en auto`,
+                ]
+                return vals[i]
+              }
+            },
+            backgroundColor: tooltipBg, borderColor: tooltipBorder, borderWidth: 1,
+            titleColor: tooltipTitle, bodyColor: tooltipBody, padding: 10,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: gridColor },
+            ticks: { color: tickColor, font: { size: 11, weight: '600' } },
+            border: { display: false },
+          },
+          y: {
+            display: false,
+            beginAtZero: true,
+          }
+        },
+        animation: { duration: 800 }
+      }
+    })
+  }
+}
+
+// ── Impacto ambiental ────────────────────────────────────────────────────────
+// Constantes — citar en presentación:
+//   HOJAS_POR_REPORTE  = 3       → cada reporte digital evita ~3 hojas impresas
+//   CO2_POR_REPORTE_KG = 0.015   → kg de CO₂ no emitido por reporte
+//   CO2_KM_AUTO        = 0.12    → kg CO₂ por km en auto promedio (auto mexicano típico)
+const HOJAS_POR_REPORTE  = 3
+const CO2_POR_REPORTE_KG = 0.015
+const CO2_KM_AUTO        = 0.12
+
+function countUp(el, target, durMs = 1500, decimales = 0) {
+  if (!el) return
+  const start = performance.now()
+  function frame(now) {
+    const t    = Math.min((now - start) / durMs, 1)
+    const ease = 1 - Math.pow(1 - t, 3)     // ease-out cubic
+    const val  = target * ease
+    el.textContent = decimales > 0
+      ? val.toFixed(decimales)
+      : Math.round(val).toLocaleString('es-MX')
+    if (t < 1) requestAnimationFrame(frame)
+  }
+  requestAnimationFrame(frame)
+}
+
+async function cargarImpactoAmbiental() {
+  let totalInc = 0, totalPost = 0
+  const [rInc, rPost] = await Promise.allSettled([
+    fetch(`${INCIDENTS_API}/incidencias/count`),
+    fetch(`${POSTS_API}/posts/count`),
+  ])
+  let totalAmbiental = 0
+  if (rInc.status === 'fulfilled' && rInc.value.ok) {
+    const d = await rInc.value.json().catch(() => ({}))
+    totalInc = Number(d.total || 0)
+    totalAmbiental = Number(d.ambiental || 0)
+  } else {
+    console.error('[Centinela] /incidencias/count falló — ¿está corriendo el servicio :9001?',
+      rInc.reason || (rInc.value && rInc.value.status))
+  }
+  if (rPost.status === 'fulfilled' && rPost.value.ok) {
+    const d = await rPost.value.json().catch(() => ({}))
+    totalPost = Number(d.total || 0)
+  } else {
+    console.error('[Centinela] /posts/count falló — ¿está corriendo el servicio :9002?',
+      rPost.reason || (rPost.value && rPost.value.status))
+  }
+
+  const total  = totalInc + totalPost
+  const hojas  = total * HOJAS_POR_REPORTE           // papel_evitado
+  const co2Kg  = total * CO2_POR_REPORTE_KG           // co2_evitado_kg
+  const kmAuto = co2Kg / CO2_KM_AUTO                  // equivalencia km
+
+  const elTotal = document.getElementById('eco-total')
+  if (elTotal) elTotal.textContent = total.toLocaleString('es-MX')
+  countUp(document.getElementById('eco-hojas'), hojas)
+  countUp(document.getElementById('eco-co2'),   co2Kg,  1500, 2)
+  countUp(document.getElementById('eco-km'),    kmAuto, 1500, 1)
+
+  const elAmbiental = document.getElementById('eco-ambiental')
+  if (elAmbiental) elAmbiental.textContent = totalAmbiental.toLocaleString('es-MX')
+
+  const upd = document.getElementById('eco-last-update')
+  if (upd) upd.textContent = `Actualizado ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+
+  // ── Contadores de incidencias ──────────────────────────────────────────────
+  const seguridad = Math.max(0, totalInc - totalAmbiental)
+  const elIncTotal = document.getElementById('inc-total')
+  const elIncSeg   = document.getElementById('inc-seguridad')
+  const elIncAmb   = document.getElementById('inc-ambiental')
+  if (elIncTotal) countUp(elIncTotal, totalInc)
+  if (elIncSeg)   countUp(elIncSeg,   seguridad)
+  if (elIncAmb)   countUp(elIncAmb,   totalAmbiental)
+
+  // ── Gráficas (con retardo para que los count-ups arranquen primero) ─────────
+  setTimeout(() => {
+    renderEcoCharts(total, totalAmbiental)
+    renderIncChart(totalInc, totalAmbiental)
+  }, 1600)
+}
+
+// ── Gráfica semanal ──────────────────────────────────────────────────────────
+let _semanaChart = null
+
+function semanaLabel(key) {
+  try {
+    const m = key.match(/^(\d{4})-W(\d{1,2})$/)
+    if (!m) return key
+    const year = +m[1], week = +m[2]
+    const jan1 = new Date(year, 0, 1)
+    const dow = jan1.getDay()
+    const toFirstMon = dow === 0 ? 1 : dow === 1 ? 0 : 8 - dow
+    const firstMon = new Date(year, 0, 1 + toFirstMon)
+    const weekStart = week === 0
+      ? jan1
+      : new Date(firstMon.getTime() + (week - 1) * 7 * 86400000)
+    return weekStart.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+  } catch (e) { return key }
+}
+
+function renderSemanaChart(data) {
+  if (typeof Chart === 'undefined') return
+  const ctx = document.getElementById('chart-semana')
+  if (!ctx) return
+  if (_semanaChart) { _semanaChart.destroy(); _semanaChart = null }
+
+  const isLight     = document.documentElement.classList.contains('light')
+  const tickColor   = isLight ? '#4D8078' : '#a0cfc7'
+  const gridColor   = isLight ? 'rgba(189,208,205,0.5)' : 'rgba(30,51,48,0.6)'
+  const tooltipBg   = isLight ? '#F8FAFA' : '#0F1A17'
+  const tooltipBorder = isLight ? '#BDD0CD' : '#1E3330'
+
+  const hasAny = data.some(d => d.total > 0)
+  const wrap = document.getElementById('semana-chart-wrap')
+  const existOverlay = document.getElementById('_semana-empty-overlay')
+  if (!hasAny) {
+    if (!existOverlay) {
+      const el = document.createElement('div')
+      el.id = '_semana-empty-overlay'
+      el.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;pointer-events:none;'
+      el.style.color = isLight ? '#4D8078' : '#6B9E96'
+      el.textContent = 'Sin reportes en las últimas 8 semanas'
+      wrap.appendChild(el)
+    }
+  } else {
+    if (existOverlay) existOverlay.remove()
+  }
+
+  _semanaChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(d => d.semana ? semanaLabel(d.semana) : ''),
+      datasets: [
+        {
+          label: 'Seguridad',
+          data: data.map(d => d.seguridad),
+          backgroundColor: 'rgba(239,68,68,0.75)',
+          borderColor: '#EF4444',
+          borderWidth: 1.5,
+          borderRadius: 5,
+          borderSkipped: false,
+        },
+        {
+          label: 'Ambiental',
+          data: data.map(d => d.ambiental),
+          backgroundColor: 'rgba(74,222,128,0.75)',
+          borderColor: '#4ade80',
+          borderWidth: 1.5,
+          borderRadius: 5,
+          borderSkipped: false,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => `Sem. del ${items[0].label}`,
+            label: (ctx) => ` ${ctx.dataset.label}: ${ctx.raw} reportes`,
+          },
+          backgroundColor: tooltipBg, borderColor: tooltipBorder, borderWidth: 1,
+          titleColor: isLight ? '#0D7A64' : '#0DF2CC',
+          bodyColor: isLight ? '#4D8078' : '#a0cfc7',
+          padding: 10,
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { color: tickColor, font: { size: 10, weight: '600' } },
+          border: { display: false },
+        },
+        y: {
+          stacked: true,
+          beginAtZero: true,
+          grid: { color: gridColor },
+          ticks: { color: tickColor, font: { size: 10 }, precision: 0, stepSize: 1 },
+          border: { display: false },
+        }
+      },
+      animation: { duration: 900 }
+    }
+  })
+}
+
+async function cargarGraficaSemanal() {
+  const errEl = document.getElementById('semana-error')
+  try {
+    const r = await fetch(`${INCIDENTS_API}/incidencias/por-semana?semanas=8`)
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const data = await r.json()
+    renderSemanaChart(data)
+    const upd = document.getElementById('semana-last-update')
+    if (upd) upd.textContent = `Actualizado ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`
+    if (errEl) errEl.style.display = 'none'
+  } catch (e) {
+    console.error('[Centinela] /incidencias/por-semana falló — ¿está corriendo el servicio :9001?', e)
+    if (errEl) {
+      errEl.textContent = 'Sin datos — verifica que el servicio de reportes (:9001) esté activo'
+      errEl.style.display = 'block'
+    }
+    renderSemanaChart(Array.from({ length: 8 }, () => ({ semana: '', total: 0, seguridad: 0, ambiental: 0 })))
+  }
+}
+
+cargarIncidencias()
+cargarPublicaciones()
+cargarBadgeNotificaciones()
+cargarEventoPrincipal()
+cargarImpactoAmbiental()
+cargarGraficaSemanal()
+setInterval(cargarImpactoAmbiental, 30000)
+setInterval(cargarGraficaSemanal, 30000)
+</script>
+<script src="js/sos-draggable.js"></script>
+<script>fetch('asistente.html').then(r=>r.text()).then(h=>{document.body.insertAdjacentHTML('beforeend',h);const s=document.createElement('script');s.src='js/asistente.js';document.body.appendChild(s);}).catch(()=>{})</script>
+</body>
+</html>

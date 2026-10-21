@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Mapa de Emergencia — Centinela</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; width: 100%; overflow: hidden; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0D1C19;
+    color: #e2f0ec;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ─────────────────────────────────────────────── */
+  header {
+    background: #152321;
+    border-bottom: 1px solid #1E3330;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .btn-back {
+    background: #1E3330;
+    border: none;
+    color: #0DF2CC;
+    padding: 7px 14px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .btn-back:hover { background: rgba(13,242,204,0.15); }
+
+  #victim-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e2f0ec;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ── Status bar ─────────────────────────────────────────── */
+  .status-bar {
+    padding: 8px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .status-bar::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .status-bar.connecting   { background: #1a2f2c; color: #6B9E96; }
+  .status-bar.connecting::before { background: #6B9E96; }
+  .status-bar.connected    { background: rgba(13,242,204,0.06); color: #0DF2CC; }
+  .status-bar.connected::before { background: #0DF2CC; animation: pulse-dot 1.5s infinite; }
+  .status-bar.live         { background: rgba(34,197,94,0.08); color: #4ade80; }
+  .status-bar.live::before { background: #4ade80; animation: pulse-dot 1s infinite; }
+  .status-bar.error        { background: rgba(248,113,113,0.08); color: #f87171; }
+  .status-bar.error::before { background: #f87171; }
+  .status-bar.disconnected { background: rgba(251,191,36,0.06); color: #fbbf24; }
+  .status-bar.disconnected::before { background: #fbbf24; }
+
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── Info row ───────────────────────────────────────────── */
+  .info-row {
+    background: #0D1C19;
+    border-top: 1px solid #1E3330;
+    padding: 8px 20px;
+    display: flex;
+    gap: 20px;
+    font-size: 12px;
+    color: #6B9E96;
+    flex-shrink: 0;
+  }
+  .info-row span { display: flex; align-items: center; gap: 5px; }
+  .info-row strong { color: #a0cfc7; }
+
+  /* ── Map ────────────────────────────────────────────────── */
+  #mapa { flex: 1; width: 100%; min-height: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="javascript:history.back()" class="btn-back">← Volver</a>
+  <div id="victim-title">Emergencia activa</div>
+</header>
+
+<div id="status-bar" class="status-bar connecting">Conectando...</div>
+
+<div id="mapa"></div>
+
+<div class="info-row">
+  <span><strong>Coords:</strong> <span id="coords">—</span></span>
+  <span id="last-update">Sin actualizaciones aún</span>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/session-bridge.js"></script>
+<script src="js/mapa-emergencia.js"></script>
+</body>
+</html>

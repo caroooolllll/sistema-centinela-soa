@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  CENTINELA · Landing con Scroll-Scrubbing
+  ============================================================
+  Anima una secuencia de frames mapeada al scroll del usuario,
+  termina con un fundido a blanco y la pantalla de login/registro.
+
+  CÓMO USARLO EN TU PROYECTO:
+  1. Copia este archivo a tu carpeta frontend/ (ej: como "landing.html"
+     o reemplaza tu login actual).
+  2. Pon la carpeta de frames AL LADO de este archivo, así:
+        frontend/
+        ├── landing.html        <- este archivo
+        └── frames/
+              ├── frame_0001.jpg
+              ├── frame_0002.jpg
+              └── ... frame_0563.jpg
+  3. Ábrelo SERVIDO por tu http.server (no con doble clic):
+        python -m http.server 9300 --bind 0.0.0.0
+        luego entra a  http://localhost:9300/landing.html
+     (Servirlo importa: con file:// algunos navegadores bloquean
+      la carga de las imágenes.)
+
+  AJUSTES RÁPIDOS: revisa el bloque CONFIG abajo (número de frames,
+  rutas de login/registro, color final, etc.).
+  ============================================================
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centinela</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --primary:#0DF2CC;
+    --bg-dark:#0D1C19;
+    --end-bg:#ffffff;          /* color al que funde el final (blanco, como lo pediste).
+                                  Si lo prefieres oscuro, ponlo en #0D1C19 */
+    --end-text:#0D1C19;        /* color del texto sobre el fondo final */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg-dark);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased}
+
+  /* ---- Loader inicial ---- */
+  #loader{position:fixed;inset:0;z-index:100;background:var(--bg-dark);display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    transition:opacity .6s ease}
+  #loader.hidden{opacity:0;pointer-events:none}
+  .loader-emblem{width:54px;height:54px;border-radius:50%;border:2px solid rgba(13,242,204,.25);
+    border-top-color:var(--primary);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loader-text{color:var(--primary);font-size:14px;letter-spacing:.18em;text-transform:uppercase;font-weight:500}
+  .loader-bar{width:220px;height:3px;background:rgba(13,242,204,.15);border-radius:99px;overflow:hidden}
+  .loader-bar span{display:block;height:100%;width:0%;background:var(--primary);
+    box-shadow:0 0 12px var(--primary);transition:width .2s ease}
+  .loader-pct{color:rgba(255,255,255,.4);font-size:12px;letter-spacing:.1em}
+
+  /* ---- Contenedor de scroll ---- */
+  #scroll-space{position:relative;width:100%}       /* su altura define cuánto scroll hay (ver CONFIG) */
+  #stage{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:var(--bg-dark)}
+  #frame-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* hint de scroll que aparece al inicio */
+  #scroll-hint{position:fixed;bottom:34px;left:50%;transform:translateX(-50%);z-index:30;
+    color:rgba(255,255,255,.75);font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    display:flex;flex-direction:column;align-items:center;gap:8px;transition:opacity .4s ease;
+    text-shadow:0 2px 10px rgba(0,0,0,.6)}
+  #scroll-hint .chev{width:22px;height:22px;border-right:2px solid var(--primary);
+    border-bottom:2px solid var(--primary);transform:rotate(45deg);animation:bob 1.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:rotate(45deg) translate(0,0)}50%{transform:rotate(45deg) translate(4px,4px)}}
+
+  /* ---- Cortina final (fundido a blanco) ---- */
+  #curtain{position:fixed;inset:0;z-index:40;background:var(--end-bg);opacity:0;pointer-events:none;
+    transition:opacity .1s linear}
+
+  /* ---- Pantalla de login/registro ---- */
+  #auth{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:0;opacity:0;pointer-events:none;padding:24px;text-align:center;
+    transition:opacity .5s ease}
+  #auth.visible{pointer-events:auto}
+  #auth .logo{width:130px;height:130px;object-fit:contain;margin-bottom:6px;
+    filter:drop-shadow(0 0 22px rgba(13,242,204,.55))}
+  #auth .wordmark{font-size:clamp(38px,7vw,62px);font-weight:700;letter-spacing:.02em;color:var(--end-text)}
+  #auth .wordmark b{color:var(--primary)}
+  #auth .tagline{font-size:clamp(14px,2.4vw,17px);color:#5a6b67;margin-top:6px;margin-bottom:34px;
+    font-weight:400;letter-spacing:.01em}
+  #auth .btns{display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px}
+  #auth .btn{display:flex;align-items:center;justify-content:center;height:54px;border-radius:14px;
+    font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;border:none;
+    transition:transform .15s ease,box-shadow .25s ease;text-decoration:none}
+  #auth .btn-primary{background:var(--primary);color:#06231d;box-shadow:0 8px 24px rgba(13,242,204,.4)}
+  #auth .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(13,242,204,.55)}
+  #auth .btn-ghost{background:transparent;color:var(--end-text);border:1.5px solid rgba(13,28,25,.25)}
+  #auth .btn-ghost:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-2px)}
+  /* si end-bg es oscuro, el botón fantasma se ve mejor con borde claro:
+     cambia rgba(13,28,25,.25) por rgba(255,255,255,.25) */
+</style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="loader-emblem"></div>
+    <div class="loader-text">Centinela</div>
+    <div class="loader-bar"><span id="loader-fill"></span></div>
+    <div class="loader-pct" id="loader-pct">0%</div>
+  </div>
+
+  <!-- Hint de scroll -->
+  <div id="scroll-hint"><span>Desliza</span><span class="chev"></span></div>
+
+  <!-- Zona de scroll -->
+  <div id="scroll-space">
+    <div id="stage">
+      <canvas id="frame-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Cortina blanca + pantalla de auth -->
+  <div id="curtain"></div>
+  <div id="auth">
+    <!-- Si tienes el logo turquesa en PNG, ponlo en la misma carpeta como logo.png.
+         Si no existe, se oculta solo y se muestra el texto. -->
+    <img class="logo" src="logo.png" alt="Centinela" onerror="this.style.display='none'">
+    <div class="wordmark">Centi<b>nela</b></div>
+    <div class="tagline">Tu comunidad, protegida en tiempo real</div>
+    <div class="btns">
+      <a class="btn btn-primary" id="btn-login" href="#">Iniciar sesión</a>
+      <a class="btn btn-ghost"   id="btn-register" href="#">Registrarme</a>
+    </div>
+  </div>
+
+<script>
+/* ===================== CONFIG ===================== */
+const CONFIG = {
+  TOTAL_FRAMES: 563,                 // <- cuántos frames hay en /frames
+  FRAME_PATH:  i => `frames/frame_${String(i).padStart(4,'0')}.jpg`, // patrón de nombres
+  SCROLL_VH:   600,                  // alto de la zona de scroll (en vh). Más alto = scroll más largo/lento
+  ANIM_END:    0.82,                 // a qué % del scroll terminan los frames (0-1)
+  FADE_START:  0.84,                 // cuándo empieza el fundido a blanco
+  FADE_END:    0.96,                 // cuándo el blanco está completo
+  AUTH_START:  0.90,                 // cuándo aparece el login
+  LOGIN_URL:    'login.html',        // <- cambia por tu página real de login
+  REGISTER_URL: 'registro.html'      // <- cambia por tu página real de registro (o login.html#registro)
+};
+/* ================================================= */
+
+// aplica rutas a los botones
+document.getElementById('btn-login').href = CONFIG.LOGIN_URL;
+document.getElementById('btn-register').href = CONFIG.REGISTER_URL;
+
+// define el alto del scroll
+document.getElementById('scroll-space').style.height = CONFIG.SCROLL_VH + 'vh';
+
+const canvas = document.getElementById('frame-canvas');
+const ctx = canvas.getContext('2d', { alpha:false });
+const images = new Array(CONFIG.TOTAL_FRAMES);
+let loaded = 0, ready = false, currentFrame = -1;
+
+/* ---- Preload de todos los frames con barra de progreso ---- */
+function preload(){
+  for(let i=1;i<=CONFIG.TOTAL_FRAMES;i++){
+    const img = new Image();
+    img.onload = img.onerror = () => {
+      loaded++;
+      const pct = Math.round(loaded / CONFIG.TOTAL_FRAMES * 100);
+      document.getElementById('loader-fill').style.width = pct + '%';
+      document.getElementById('loader-pct').textContent = pct + '%';
+      if(loaded === CONFIG.TOTAL_FRAMES) onReady();
+    };
+    img.src = CONFIG.FRAME_PATH(i);
+    images[i-1] = img;
+  }
+}
+
+function onReady(){
+  ready = true;
+  document.getElementById('loader').classList.add('hidden');
+  resize();
+  draw(0);
+}
+
+/* ---- Canvas a tamaño de pantalla (retina) ---- */
+function resize(){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width  = window.innerWidth  * dpr;
+  canvas.height = window.innerHeight * dpr;
+  if(ready) draw(currentFrame < 0 ? 0 : currentFrame, true);
+}
+
+/* ---- Dibuja un frame con "cover" (llena la pantalla sin deformar) ---- */
+function draw(index, force){
+  if(!ready) return;
+  index = Math.max(0, Math.min(CONFIG.TOTAL_FRAMES-1, Math.round(index)));
+  if(index === currentFrame && !force) return;
+  currentFrame = index;
+  const img = images[index];
+  if(!img || !img.width) return;
+  const cw = canvas.width, ch = canvas.height;
+  const scale = Math.max(cw/img.width, ch/img.height);
+  const w = img.width*scale, h = img.height*scale;
+  const x = (cw-w)/2, y = (ch-h)/2;
+  ctx.fillStyle = '#0D1C19';
+  ctx.fillRect(0,0,cw,ch);
+  ctx.drawImage(img, x, y, w, h);
+}
+
+/* ---- Scroll → frame + cortina + login ---- */
+const curtain = document.getElementById('curtain');
+const auth = document.getElementById('auth');
+const hint = document.getElementById('scroll-hint');
+
+function lerp(p,a,b){ return Math.max(0, Math.min(1, (p-a)/(b-a))); }
+
+function onScroll(){
+  if(!ready) return;
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  const p = max > 0 ? window.scrollY / max : 0;   // progreso 0..1
+
+  // frames
+  const fp = Math.min(p / CONFIG.ANIM_END, 1);
+  draw(fp * (CONFIG.TOTAL_FRAMES-1));
+
+  // cortina blanca
+  curtain.style.opacity = lerp(p, CONFIG.FADE_START, CONFIG.FADE_END);
+
+  // login
+  const ap = lerp(p, CONFIG.AUTH_START, 1);
+  auth.style.opacity = ap;
+  auth.classList.toggle('visible', ap > 0.5);
+
+  // hint desaparece al primer scroll
+  hint.style.opacity = p > 0.02 ? 0 : 1;
+}
+
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if(!ticking){ requestAnimationFrame(()=>{ onScroll(); ticking=false; }); ticking=true; }
+}, {passive:true});
+window.addEventListener('resize', resize);
+
+preload();
+</script>
+</body>
+</html>

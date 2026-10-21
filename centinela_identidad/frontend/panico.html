@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Centinela — Alerta de Emergencia</title>
+<script src="js/session-bridge.js"></script>
+<script src="js/ui-preferences.js"></script>
+<script src="js/private-contact-config.js"></script>
+<link rel="stylesheet" href="css/ui-shell.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<style>
+  * { font-family: 'Outfit', sans-serif; }
+
+  @keyframes siren   { 0%,100%{background:#EF4444} 50%{background:#DC2626} }
+  @keyframes ring    { 0%{transform:scale(1);opacity:.8} 100%{transform:scale(2.2);opacity:0} }
+  @keyframes countIn { from{transform:scale(.6);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes shakeBtn{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+  @keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  @keyframes pulseGps{ 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  body        { background:#EF4444; animation:siren 1.8s ease-in-out infinite; }
+  .ring       { position:absolute;inset:0;border-radius:9999px;border:2px solid rgba(255,255,255,.5);animation:ring 2s ease-out infinite; }
+  .ring-2     { animation-delay:.6s; }
+  .ring-3     { animation-delay:1.2s; }
+  .number     { animation:countIn .6s cubic-bezier(.34,1.56,.64,1) forwards; }
+  .call-btn   { animation:shakeBtn .5s ease 1s; }
+  .content    { animation:slideUp .5s ease forwards; }
+  .notify-btn { animation:slideUp .5s ease .2s both; }
+  .gps-pulse  { animation:pulseGps 1.2s ease-in-out infinite; }
+
+  .glass {
+    background:rgba(255,255,255,.15);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.25);
+  }
+
+  /* ── Contact modal ──────────────────────────────────────── */
+  #contact-modal {
+    position:fixed; inset:0;
+    display:none; align-items:center; justify-content:center;
+    padding:16px; z-index:60;
+    background:rgba(0,0,0,.88);
+    backdrop-filter:blur(10px);
+  }
+  .modal-card {
+    width:100%; max-width:420px;
+    background:rgba(20,0,0,.95);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:20px; padding:24px;
+  }
+  .modal-card h2  { color:#fff; font-size:1.2rem; font-weight:800; margin-bottom:4px; }
+  .modal-card > p { color:rgba(255,255,255,.55); font-size:.85rem; margin-bottom:18px; line-height:1.5; }
+
+  .contact-list { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto; margin-bottom:18px; }
+  .contact-item {
+    display:flex; align-items:center; gap:12px;
+    background:rgba(255,255,255,.08); border-radius:12px;
+    padding:10px 14px; cursor:pointer; transition:background .15s;
+  }
+  .contact-item:hover { background:rgba(255,255,255,.14); }
+  .contact-item input[type=checkbox] { width:18px; height:18px; accent-color:#ef4444; flex-shrink:0; cursor:pointer; }
+  .contact-item label { flex:1; cursor:pointer; }
+  .cn { color:#fff; font-weight:600; font-size:.95rem; display:block; }
+  .cm { color:rgba(255,255,255,.45); font-size:.78rem; }
+  .no-contacts { color:rgba(255,255,255,.45); font-size:.85rem; text-align:center; padding:20px 0; line-height:1.6; }
+  .no-contacts a { color:#f87171; }
+
+  #btn-activar-panico {
+    width:100%; background:#EF4444; color:#fff;
+    border:none; border-radius:12px; padding:14px;
+    font-size:1.1rem; font-weight:900; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s; margin-bottom:0;
+  }
+  #btn-activar-panico:hover { background:#DC2626; }
+  #btn-solo-llamar {
+    display:block; width:100%; text-align:center;
+    margin-top:10px; background:none; border:none;
+    color:rgba(255,255,255,.45); font-size:.82rem;
+    cursor:pointer; transition:color .15s;
+  }
+  #btn-solo-llamar:hover { color:rgba(255,255,255,.7); }
+
+  /* ── GPS status bar ─────────────────────────────────────── */
+  #sharing-bar {
+    position:fixed; bottom:72px; left:0; right:0;
+    display:none; justify-content:center; z-index:40;
+    pointer-events:none;
+  }
+  .sharing-pill {
+    display:flex; align-items:center; gap:10px;
+    background:rgba(0,0,0,.55); backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:999px; padding:10px 20px;
+    pointer-events:auto;
+  }
+  .sharing-pill .gps-icon { color:#4ade80; font-size:1.2rem; }
+  .sharing-pill span { color:#fff; font-size:.85rem; font-weight:600; }
+  .sharing-pill button {
+    background:rgba(255,255,255,.18); border:none; color:#fff;
+    padding:4px 12px; border-radius:999px; font-size:.75rem;
+    font-weight:700; cursor:pointer; transition:background .15s; margin-left:4px;
+  }
+  .sharing-pill button:hover { background:rgba(255,255,255,.3); }
+
+  /* ── Mini-map ───────────────────────────────────────────── */
+  #map-panel {
+    position:fixed; bottom:130px; left:12px;
+    display:none; z-index:40;
+    width:152px; height:152px;
+    border-radius:14px; overflow:hidden;
+    border:2px solid rgba(255,255,255,.3);
+    box-shadow:0 4px 20px rgba(0,0,0,.4);
+  }
+  #mini-map { width:100%; height:100%; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-6 overflow-hidden relative">
+
+  <!-- Decorative background circles -->
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
+    <div class="w-[600px] h-[600px] rounded-full border border-white/10 absolute"></div>
+    <div class="w-[800px] h-[800px] rounded-full border border-white/5 absolute"></div>
+    <div class="w-[1000px] h-[1000px] rounded-full border border-white/5 absolute"></div>
+  </div>
+
+  <!-- ── Contact selection modal ────────────────────────────────────────── -->
+  <div id="contact-modal">
+    <div class="modal-card">
+      <h2>Compartir ubicación</h2>
+      <p>Selecciona quién recibirá tu posición GPS en tiempo real durante la emergencia.</p>
+      <div class="contact-list" id="modal-contact-list">
+        <p class="no-contacts">Cargando contactos...</p>
+      </div>
+      <button id="btn-activar-panico">
+        <span class="material-icons-round" style="font-size:1.3rem">warning</span>
+        Activar PÁNICO
+      </button>
+      <button id="btn-solo-llamar">Solo llamar — sin compartir ubicación</button>
+    </div>
+  </div>
+
+  <!-- ── Banner: activación automática por gesto ────────────────────── -->
+  <div id="auto-banner" style="display:none"
+       class="fixed top-0 inset-x-0 z-50 flex items-center justify-center gap-3 px-6 py-3 text-white font-bold text-base bg-black/60 backdrop-blur-sm border-b border-white/30">
+    <span class="material-icons-round" style="font-size:1.3rem">warning</span>
+    <span>Pánico activado automáticamente por detección de seña de auxilio</span>
+  </div>
+
+  <!-- Back button -->
+  <button onclick="history.back()"
+          class="absolute top-6 left-6 glass text-white px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-semibold hover:bg-white/25 transition-colors z-10">
+    <span class="material-icons-round text-lg">arrow_back</span>
+    Cancelar
+  </button>
+
+  <!-- Main layout: 3 columns -->
+  <div class="content w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-10 items-center z-10">
+
+    <!-- Left: EMERGENCY circle -->
+    <div class="flex flex-col items-center">
+      <div class="relative w-56 h-56 flex items-center justify-center">
+        <div class="ring"></div><div class="ring ring-2"></div><div class="ring ring-3"></div>
+        <div class="w-44 h-44 bg-white rounded-full flex items-center justify-center shadow-2xl relative z-10">
+          <h2 class="text-red-600 text-5xl font-black uppercase leading-none text-center tracking-tighter">EMER<br/>GENCIA</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: phone number -->
+    <div class="flex flex-col items-center text-center gap-4">
+      <p class="text-white/90 text-2xl font-bold uppercase tracking-[0.3em]">Llama al</p>
+      <h1 id="emergency-phone-display"
+          class="number text-white font-black leading-none select-none cursor-default hover:scale-105 transition-transform"
+          style="font-size:clamp(4.8rem,11vw,8rem);text-shadow:0 4px 40px rgba(0,0,0,.3);">
+        911
+      </h1>
+      <p id="emergency-phone-label" class="text-white/60 text-sm">Sistema de Alerta Centinela</p>
+    </div>
+
+    <!-- Right: call button -->
+    <div class="flex flex-col items-center">
+      <a id="emergency-call-link" href="tel:911"
+         class="relative w-56 h-56 flex items-center justify-center group">
+        <div class="ring" style="animation-delay:.3s"></div>
+        <div class="ring ring-2" style="animation-delay:.9s"></div>
+        <div class="call-btn w-44 h-44 bg-white rounded-full flex items-center justify-center shadow-2xl relative z-10 group-hover:scale-105 active:scale-95 transition-transform cursor-pointer">
+          <span class="material-icons-round text-red-600 text-8xl -rotate-12 group-hover:rotate-0 transition-transform duration-300">phone_in_talk</span>
+        </div>
+        <span class="absolute -bottom-8 text-white/70 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity">Click para llamar</span>
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Bottom: notify authorities -->
+  <div class="notify-btn absolute bottom-8 right-8 z-10">
+    <button onclick="notificarCentinela()"
+            class="glass text-white pl-6 pr-3 py-3 rounded-full flex items-center gap-4 hover:bg-white/25 transition-colors group">
+      <p class="font-bold text-lg text-right leading-tight hidden md:block">¡Notifica a las<br/>autoridades!</p>
+      <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+        <span class="material-icons-round text-red-600 text-3xl">warning</span>
+      </div>
+    </button>
+  </div>
+
+  <!-- GPS sharing status bar -->
+  <div id="sharing-bar">
+    <div class="sharing-pill">
+      <span class="material-icons-round gps-icon gps-pulse">location_on</span>
+      <span id="sharing-text">Enviando ubicación...</span>
+      <button onclick="detenerCompartir()">Detener</button>
+    </div>
+  </div>
+
+  <!-- Mini Leaflet map (bottom-left) -->
+  <div id="map-panel">
+    <div id="mini-map"></div>
+  </div>
+
+  <!-- Footer -->
+  <p class="absolute bottom-4 left-0 w-full text-center text-white/30 text-xs uppercase tracking-widest">
+    Sistema de Alerta Centinela © 2025
+  </p>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ============================================================
+// ⚠️ NÚMERO DE EMERGENCIA — MODO PRUEBAS
+// Para producción: cambiar por "911" o el número real del servicio
+const NUMERO_EMERGENCIA = "+527224598680";
+// ============================================================
+
+const DJANGO_URL = 'http://localhost:9000';
+const token      = localStorage.getItem('token');
+const nombre     = localStorage.getItem('usuarioActual') || 'Vecino';
+
+const sosConfig      = window.CentinelaSOSConfig || {};
+const emergencyPhone = String(sosConfig.emergencyPhone || NUMERO_EMERGENCIA).trim();
+const displayPhone   = String(sosConfig.displayPhone   || emergencyPhone).trim();
+const emergencyLabel = String(sosConfig.emergencyLabel || 'Llamando a emergencias...').trim();
+
+document.getElementById('emergency-phone-display').textContent = displayPhone;
+document.getElementById('emergency-phone-label').textContent   = emergencyLabel;
+document.getElementById('emergency-call-link').href = `tel:${emergencyPhone}`;
+
+// ── GPS sharing state ─────────────────────────────────────────────────────────
+let watchId                = null;
+let contactosSeleccionados = [];
+let lastPostedTime         = 0;
+let ultimaPosicion         = null;
+let miniMap                = null;
+let miniMarker             = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escHTML(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Cargar contactos desde API ────────────────────────────────────────────────
+async function cargarContactos() {
+  if (!token) return [];
+  try {
+    const r = await fetch(`${DJANGO_URL}/api/contactos-emergencia/`, {
+      headers: { 'Authorization': `Token ${token}` }
+    });
+    if (!r.ok) return [];
+    return await r.json();
+  } catch {
+    return [];
+  }
+}
+
+// ── Renderizar lista en modal ─────────────────────────────────────────────────
+function renderizarModalContactos(contactos) {
+  const lista = document.getElementById('modal-contact-list');
+  if (!lista) return;
+  if (contactos.length === 0) {
+    lista.innerHTML = `<p class="no-contacts">Sin contactos guardados.<br/>
+      <a href="emergencia-contactos.html">Agregar contactos de emergencia</a></p>`;
+    return;
+  }
+  lista.innerHTML = contactos.map(c => `
+    <div class="contact-item">
+      <input type="checkbox" id="cb-${c.id}" class="contact-cb" value="${c.id}" checked/>
+      <label for="cb-${c.id}">
+        <span class="cn">${escHTML(c.nombre_contacto)}</span>
+        <span class="cm">${escHTML(c.relacion_display)}${c.numero_telefono ? ' · ' + escHTML(c.numero_telefono) : ''}</span>
+      </label>
+    </div>
+  `).join('');
+}
+
+function contactosChecked() {
+  return [...document.querySelectorAll('.contact-cb:checked')].map(cb => Number(cb.value));
+}
+
+// ── GPS sharing ───────────────────────────────────────────────────────────────
+function iniciarCompartirUbicacion(ids) {
+  if (!navigator.geolocation || !token || ids.length === 0) return;
+  contactosSeleccionados = ids;
+
+  const bar = document.getElementById('sharing-bar');
+  const txt = document.getElementById('sharing-text');
+  if (bar) bar.style.display = 'flex';
+  if (txt) txt.textContent = `Enviando ubicación a ${ids.length} contacto${ids.length !== 1 ? 's' : ''}`;
+
+  watchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      ultimaPosicion = pos;
+      const now = Date.now();
+      if (now - lastPostedTime < 5000) return;
+      lastPostedTime = now;
+      enviarUbicacion(pos.coords.latitude, pos.coords.longitude, ids, true);
+      actualizarMiniMapa(pos.coords.latitude, pos.coords.longitude);
+    },
+    (err) => console.warn('[GPS]', err.message),
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
+  );
+
+  const panel = document.getElementById('map-panel');
+  if (panel) panel.style.display = 'block';
+}
+
+async function enviarUbicacion(lat, lng, ids, activo) {
+  if (!token) return;
+  try {
+    await fetch(`${DJANGO_URL}/api/ubicacion-emergencia/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Token ${token}`,
+      },
+      body: JSON.stringify({ lat, lng, contactos: ids, activo }),
+    });
+  } catch (e) {
+    console.warn('[GPS POST]', e);
+  }
+}
+
+function actualizarMiniMapa(lat, lng) {
+  const panel = document.getElementById('map-panel');
+  if (!panel) return;
+
+  if (!miniMap) {
+    miniMap = L.map('mini-map', { zoomControl: false, attributionControl: false })
+               .setView([lat, lng], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
+  } else {
+    miniMap.setView([lat, lng], 16);
+  }
+
+  if (miniMarker) {
+    miniMarker.setLatLng([lat, lng]);
+  } else {
+    miniMarker = L.circleMarker([lat, lng], {
+      color: '#fff', fillColor: '#ef4444', fillOpacity: 1, radius: 8, weight: 3,
+    }).addTo(miniMap);
+  }
+}
+
+function detenerCompartir() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  const bar   = document.getElementById('sharing-bar');
+  const panel = document.getElementById('map-panel');
+  if (bar)   bar.style.display   = 'none';
+  if (panel) panel.style.display = 'none';
+
+  if (ultimaPosicion && contactosSeleccionados.length > 0 && token) {
+    enviarUbicacion(
+      ultimaPosicion.coords.latitude,
+      ultimaPosicion.coords.longitude,
+      contactosSeleccionados,
+      false
+    );
+  }
+  contactosSeleccionados = [];
+}
+
+// ── Función central de pánico ─────────────────────────────────────────────────
+// Usada por clic manual, botón modal, y activación automática por gesto.
+function activarPanico(ids) {
+  const contactIds = ids !== undefined ? ids : contactosSeleccionados;
+  if (contactIds && contactIds.length > 0) {
+    iniciarCompartirUbicacion(contactIds);
+  }
+  // tel: abre el marcador en móvil; el usuario confirma la llamada
+  window.location.href = `tel:${emergencyPhone}`;
+}
+
+// Botón de llamada manual vincula a activarPanico
+document.getElementById('emergency-call-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  activarPanico(contactosChecked());
+});
+
+// Botón "Activar pánico" del modal
+document.getElementById('btn-activar-panico').addEventListener('click', () => {
+  const ids = contactosChecked();
+  document.getElementById('contact-modal').style.display = 'none';
+  activarPanico(ids);
+});
+
+// Botón "Solo llamar" del modal (sin compartir ubicación)
+document.getElementById('btn-solo-llamar').addEventListener('click', () => {
+  document.getElementById('contact-modal').style.display = 'none';
+  activarPanico([]);
+});
+
+// ── Notificar a Centinela vía SDRI (3s hold) ─────────────────────────────────
+let holdTimer;
+document.querySelector('.notify-btn button').addEventListener('mousedown', () => {
+  holdTimer = setTimeout(notificarCentinela, 9300);
+});
+document.querySelector('.notify-btn button').addEventListener('mouseup', () => clearTimeout(holdTimer));
+
+async function notificarCentinela() {
+  if (!token) {
+    alert('Debes iniciar sesión para notificar a las autoridades.');
+    return;
+  }
+  const btn = document.querySelector('.notify-btn button');
+  btn.textContent = 'Notificando...';
+
+  try {
+    let lat = '', lon = '';
+    if (navigator.geolocation) {
+      await new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          pos => { lat = pos.coords.latitude; lon = pos.coords.longitude; resolve(); },
+          resolve, { timeout: 9300 }
+        );
+      });
+    }
+
+    const xmlData = `<reporte>
+      <fecha>${new Date().toISOString().split('T')[0]}</fecha>
+      <hora>${new Date().toTimeString().slice(0,5)}</hora>
+      <prioridad>Critica</prioridad>
+      <descripcion>ALERTA SOS activada por ${nombre}. Se requiere atencion inmediata.</descripcion>
+      <latitud>${lat}</latitud>
+      <longitud>${lon}</longitud>
+      <imagenes>[]</imagenes>
+    </reporte>`;
+
+    const runtime = window.CentinelaRuntime;
+    const INCIDENTS_API = runtime
+      ? runtime.serviceUrl(9001, '/api/reportar_incidencia')
+      : 'http://localhost:9001/api/reportar_incidencia';
+
+    await fetch(INCIDENTS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/xml', 'Authorization': `Token ${token}` },
+      body: xmlData,
+    });
+    location.href = 'ayuda.html';
+  } catch (err) {
+    console.error(err);
+    location.href = 'ayuda.html';
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async function init() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const esAuto    = urlParams.get('auto') === 'true';
+
+  const contactos = await cargarContactos();
+
+  if (esAuto) {
+    // Activación automática por gesto — no mostrar modal
+    const banner = document.getElementById('auto-banner');
+    if (banner) banner.style.display = 'flex';
+
+    const todasIds = contactos.map(c => c.id);
+    if (todasIds.length > 0) iniciarCompartirUbicacion(todasIds);
+    setTimeout(() => activarPanico(todasIds), 2000);
+
+  } else {
+    // Activación manual — mostrar modal si hay contactos
+    renderizarModalContactos(contactos);
+    if (contactos.length > 0) {
+      document.getElementById('contact-modal').style.display = 'flex';
+    }
+  }
+})();
+</script>
+</body>
+</html>

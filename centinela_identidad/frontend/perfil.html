@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Centinela — Mi Perfil</title>
+<script src="js/session-bridge.js"></script>
+<script src="js/ui-preferences.js"></script>
+<link rel="stylesheet" href="css/ui-shell.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { colors: {
+    primary: '#0DF2CC', 'primary-dim': '#0BC4A5',
+    'bg-dark': '#0D1C19', 'surface-dark': '#152321',
+    'surface-darker': '#0F1A17', sidebar: '#0A1512',
+    'border-dark': '#1E3330', 'text-muted': '#6B9E96', sos: '#EF4444',
+  }, fontFamily: { sans: ['Outfit','sans-serif'] } } }
+}
+</script>
+<style>
+* { font-family:'Outfit',sans-serif; }
+body { background:#0D1C19; }
+::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#1E3330;border-radius:99px}
+@keyframes sos-pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{box-shadow:0 0 0 16px rgba(239,68,68,0)}}
+.sos-pulse{animation:sos-pulse 2s infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-up{animation:fadeUp .35s ease forwards}
+.nav-item{transition:all .2s ease}
+.nav-item:hover{background:rgba(13,242,204,.06);color:#0DF2CC}
+.nav-item.active{background:rgba(13,242,204,.12);color:#0DF2CC}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.animate-spin{animation:spin .8s linear infinite}
+.cover-group:hover .cover-overlay{opacity:1}
+.cover-overlay{opacity:0;transition:opacity .2s}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tab-active{background:rgba(13,242,204,.1);color:#0DF2CC}
+.feed-card{animation:fadeUp .3s ease forwards}
+</style>
+</head>
+<body class="h-screen overflow-hidden flex text-white">
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════════════════ -->
+<aside class="w-64 bg-sidebar flex flex-col h-full border-r border-border-dark shrink-0 z-30">
+  <div class="h-20 flex items-center px-6 border-b border-border-dark">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+        <img src="assets/im2.jpeg" style="width:40px;height:40px;border-radius:100px" onerror="this.style.display='none'">
+      </div>
+      <div>
+        <h1 class="font-bold text-xl text-white leading-none">Centinela</h1>
+        <p class="text-text-muted text-xs mt-0.5">Privada La Condesa</p>
+      </div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+    <a href="dashboard.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">home</span>Inicio</a>
+    <a href="avisos.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">campaign</span>Avisos</a>
+    <a href="publicaciones.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">article</span>Publicaciones</a>
+    <a href="eventos.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">event</span>Eventos</a>
+    <a href="chat.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">chat_bubble_outline</span>Mensajes</a>
+    <a href="notificaciones.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">notifications_none</span>Notificaciones<span class="ml-auto bg-primary text-bg-dark text-xs font-bold px-1.5 py-0.5 rounded-full" id="nav-badge">0</span></a>
+    <a href="noticias.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">newspaper</span>Noticias</a>
+    <a href="historial.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">history</span>Historial</a>
+    <a href="perfil.html" class="nav-item active flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium"><span class="material-icons-round text-xl">person_outline</span>Perfil</a>
+    <div class="cn-nav-section"><p class="cn-nav-section-label">Administración</p></div>
+    <a href="accesibilidad-modo.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">accessibility_new</span>Modo Accesibilidad</a>
+    <a href="emergencia-contactos.html" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-text-muted text-sm font-medium"><span class="material-icons-round text-xl">contacts</span>Contactos de Emergencia</a>
+  </nav>
+  <div class="p-4 border-t border-border-dark">
+    <div class="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-surface-dark cursor-pointer transition-colors" onclick="location.href='perfil.html'">
+      <div class="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm overflow-hidden" id="sidebar-avatar-wrap">
+        <span id="sidebar-initial">M</span>
+        <img id="sidebar-avatar-img" class="hidden w-full h-full object-cover" alt=""/>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-white truncate" id="sidebar-name">Vecino</p>
+        <p class="text-xs text-text-muted truncate" id="sidebar-casa">Casa</p>
+      </div>
+      <button onclick="cerrarSesion(event)" class="text-text-muted hover:text-sos transition-colors"><span class="material-icons-round text-base">logout</span></button>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════════════════ -->
+<div class="flex-1 flex flex-col h-full overflow-hidden">
+
+  <!-- Thin top bar -->
+  <div class="h-14 bg-surface-darker border-b border-border-dark flex items-center justify-between px-8 shrink-0">
+    <div class="flex items-center gap-2 text-text-muted">
+      <span class="material-icons-round text-base">person_outline</span>
+      <span class="text-sm font-medium">Mi perfil</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="location.href='notificaciones.html'" class="relative p-2 rounded-xl hover:bg-surface-dark transition-colors">
+        <span class="material-icons-round text-text-muted text-xl">notifications_none</span>
+        <span class="absolute top-2 right-2 w-2 h-2 bg-sos rounded-full" id="notif-dot" style="display:none"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="flex-1 overflow-y-auto" id="main-scroll">
+
+    <!-- ─── PORTADA ─── -->
+    <div class="relative h-52 bg-gradient-to-br from-primary/20 via-primary/8 to-surface-darker overflow-hidden cover-group" id="cover-section">
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(13,242,204,0.18),transparent_65%)] pointer-events-none"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(13,242,204,0.06),transparent_50%)] pointer-events-none"></div>
+      <!-- Cover image -->
+      <img id="cover-img" class="hidden w-full h-full object-cover absolute inset-0" alt="Portada"/>
+      <!-- Overlay con botón (hover) -->
+      <div class="cover-overlay absolute inset-0 bg-black/35 flex items-center justify-center gap-3">
+        <button onclick="document.getElementById('input-portada').click()"
+          class="flex items-center gap-2 bg-surface-dark/90 border border-border-dark text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:border-primary/40 transition-colors shadow-lg">
+          <span class="material-icons-round text-base">add_photo_alternate</span>
+          Cambiar portada
+        </button>
+      </div>
+      <!-- Botón fijo cuando no hay portada -->
+      <div id="cover-placeholder-btn" class="absolute bottom-3 right-3">
+        <button onclick="document.getElementById('input-portada').click()"
+          class="flex items-center gap-2 bg-surface-dark/80 border border-border-dark text-text-muted text-xs px-3 py-1.5 rounded-lg hover:border-primary/30 hover:text-white transition-colors">
+          <span class="material-icons-round text-sm">add_photo_alternate</span>
+          Agregar portada
+        </button>
+      </div>
+      <input type="file" id="input-portada" accept="image/jpeg,image/png,image/webp" class="hidden"/>
+    </div>
+
+    <!-- ─── PROFILE HEADER ─── -->
+    <div class="px-8 pb-0">
+      <!-- Avatar row -->
+      <div class="flex items-end justify-between -mt-14 mb-5">
+        <!-- Avatar -->
+        <div class="relative z-10">
+          <div class="w-28 h-28 rounded-2xl bg-primary/20 border-4 border-bg-dark flex items-center justify-center shadow-xl overflow-hidden" id="avatar-wrap">
+            <span class="text-primary font-black text-5xl leading-none select-none" id="profile-initial">M</span>
+            <img id="avatar-img" class="hidden w-full h-full object-cover" alt="Foto de perfil"/>
+          </div>
+          <button onclick="document.getElementById('input-avatar').click()"
+            class="absolute -bottom-2 -right-2 w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-lg hover:bg-primary-dim transition-colors z-20"
+            title="Cambiar foto de perfil">
+            <span class="material-icons-round text-bg-dark text-sm">photo_camera</span>
+          </button>
+          <input type="file" id="input-avatar" accept="image/jpeg,image/png,image/webp" class="hidden"/>
+        </div>
+        <!-- Actions -->
+        <div class="flex items-center gap-2 pb-1">
+          <button onclick="abrirModalEditar()" class="cn-btn cn-btn-primary flex items-center gap-2">
+            <span class="material-icons-round" style="font-size:16px">edit</span>
+            Editar perfil
+          </button>
+          <button onclick="confirmarCerrarSesion()"
+            class="flex items-center gap-1.5 bg-sos/10 border border-sos/20 text-sos text-sm font-semibold px-3 py-2 rounded-xl hover:bg-sos/20 transition-colors">
+            <span class="material-icons-round text-base">logout</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Name + role + bio -->
+      <div class="mb-4">
+        <h1 class="text-2xl font-bold text-white leading-tight" id="profile-name">Cargando...</h1>
+        <p class="text-text-muted text-sm mt-0.5" id="profile-role">Vecino Centinela</p>
+        <p class="text-white/75 text-sm mt-2 max-w-xl leading-relaxed" id="profile-bio" style="display:none"></p>
+        <button onclick="abrirModalEditar()" id="btn-agregar-bio" class="mt-2 text-xs text-text-muted hover:text-primary flex items-center gap-1 transition-colors" style="display:none">
+          <span class="material-icons-round text-sm">add</span> Agregar descripción
+        </button>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="flex items-center gap-5 py-3 border-t border-b border-border-dark mb-6 overflow-x-auto">
+        <div class="flex flex-col items-center min-w-fit">
+          <span class="text-xl font-bold text-primary" id="stat-posts">—</span>
+          <span class="text-text-muted text-xs">publicaciones</span>
+        </div>
+        <div class="w-px h-8 bg-border-dark shrink-0"></div>
+        <div class="flex flex-col items-center min-w-fit">
+          <span class="text-xl font-bold text-primary" id="stat-reportes">—</span>
+          <span class="text-text-muted text-xs">reportes</span>
+        </div>
+        <div class="w-px h-8 bg-border-dark shrink-0"></div>
+        <div class="flex items-center gap-2 min-w-fit">
+          <span class="material-icons-round text-text-muted text-base">home</span>
+          <span class="text-white text-sm font-semibold" id="stat-casa">—</span>
+        </div>
+        <div class="w-px h-8 bg-border-dark shrink-0"></div>
+        <div class="flex items-center gap-2 min-w-fit">
+          <span class="material-icons-round text-text-muted text-base">calendar_today</span>
+          <span class="text-text-muted text-xs" id="stat-fecha">Miembro desde —</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── CONTENT GRID ─── -->
+    <div class="px-8 pb-24 grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+
+      <!-- LEFT: Info cards -->
+      <div class="lg:col-span-1 space-y-4">
+
+        <!-- Acerca de -->
+        <div class="bg-surface-dark border border-border-dark rounded-2xl p-5 fade-up">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <span class="material-icons-round text-primary text-base">info_outline</span>
+            Acerca de
+          </h3>
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <span class="material-icons-round text-text-muted text-base flex-shrink-0">alternate_email</span>
+              <span class="text-sm text-white/80 truncate" id="info-email">—</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="material-icons-round text-text-muted text-base flex-shrink-0">phone</span>
+              <span class="text-sm text-white/80" id="info-tel">—</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="material-icons-round text-text-muted text-base flex-shrink-0">home</span>
+              <span class="text-sm text-white/80" id="info-casa">—</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="material-icons-round text-text-muted text-base flex-shrink-0">badge</span>
+              <span class="text-sm text-white/80" id="info-rol">Vecino Centinela</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Foto de perfil: recomendaciones -->
+        <div class="bg-surface-dark border border-border-dark rounded-2xl p-5 fade-up">
+          <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
+            <span class="material-icons-round text-primary text-base">photo_camera</span>
+            Fotos de perfil
+          </h3>
+          <div class="space-y-2 text-xs">
+            <p class="text-text-muted font-semibold uppercase tracking-wide text-[10px] mb-2">Permitidos</p>
+            <div class="flex items-center gap-2 text-white/70">
+              <span class="material-icons-round text-primary text-sm">check_circle</span>
+              <span>JPG / JPEG, PNG, WEBP</span>
+            </div>
+            <div class="flex items-center gap-2 text-white/70">
+              <span class="material-icons-round text-primary text-sm">check_circle</span>
+              <span>Máximo <strong class="text-white">5 MB</strong> por archivo</span>
+            </div>
+            <div class="flex items-center gap-2 text-white/70">
+              <span class="material-icons-round text-primary text-sm">check_circle</span>
+              <span>Recomendado: 400×400 px o mayor</span>
+            </div>
+            <div class="border-t border-border-dark pt-3 mt-3">
+              <p class="text-text-muted font-semibold uppercase tracking-wide text-[10px] mb-2">No permitidos</p>
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2 text-white/60">
+                  <span class="material-icons-round text-sos text-sm">cancel</span>
+                  <span>GIF animado</span>
+                </div>
+                <div class="flex items-center gap-2 text-white/60">
+                  <span class="material-icons-round text-sos text-sm">cancel</span>
+                  <span>SVG</span>
+                </div>
+                <div class="flex items-center gap-2 text-white/60">
+                  <span class="material-icons-round text-sos text-sm">cancel</span>
+                  <span>HEIC / HEIF</span>
+                </div>
+                <div class="flex items-center gap-2 text-white/60">
+                  <span class="material-icons-round text-sos text-sm">cancel</span>
+                  <span>Archivos &gt; 5 MB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Feed -->
+      <div class="lg:col-span-2 space-y-4">
+
+        <!-- Nueva publicación -->
+        <div class="bg-surface-dark border border-border-dark rounded-2xl p-5 fade-up">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0 overflow-hidden">
+              <span id="post-initial">M</span>
+              <img id="post-avatar-img" class="hidden w-full h-full object-cover" alt=""/>
+            </div>
+            <textarea id="nuevo-post-texto" rows="2"
+              placeholder="¿Qué está pasando en la comunidad?"
+              class="flex-1 bg-surface-darker border border-border-dark rounded-xl px-4 py-2.5 text-sm text-white placeholder-text-muted focus:outline-none focus:border-primary/40 resize-none transition-colors"
+              oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+          </div>
+          <!-- Post image preview -->
+          <div id="post-img-preview-wrap" class="hidden mt-3 relative">
+            <img id="post-img-preview" class="max-h-52 w-full object-cover rounded-xl border border-border-dark" alt=""/>
+            <button onclick="quitarImagenPost()"
+              class="absolute top-2 right-2 w-7 h-7 bg-surface-darker/90 rounded-lg flex items-center justify-center hover:bg-sos/20 transition-colors">
+              <span class="material-icons-round text-text-muted text-sm">close</span>
+            </button>
+          </div>
+          <!-- Post image validation error -->
+          <div id="post-img-error" class="hidden mt-2 flex items-center gap-2 text-sos text-xs">
+            <span class="material-icons-round text-sm">error_outline</span>
+            <span id="post-img-error-msg"></span>
+          </div>
+          <!-- Bottom actions -->
+          <div class="flex items-center justify-between mt-4 pt-3 border-t border-border-dark">
+            <div>
+              <input type="file" id="input-post-img" accept="image/jpeg,image/png,image/webp" class="hidden"/>
+              <button onclick="document.getElementById('input-post-img').click()"
+                class="flex items-center gap-1.5 text-text-muted hover:text-primary text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors">
+                <span class="material-icons-round text-base">image</span>
+                Adjuntar foto
+              </button>
+            </div>
+            <button onclick="publicar()" id="btn-publicar" class="cn-btn cn-btn-primary flex items-center gap-2">
+              <span class="material-icons-round" style="font-size:16px">send</span>
+              Publicar
+            </button>
+          </div>
+        </div>
+
+        <!-- Activity tabs -->
+        <div class="flex items-center gap-1 bg-surface-dark border border-border-dark rounded-2xl p-1.5">
+          <button onclick="filtrarFeed('all')" id="tab-all"
+            class="tab-btn flex-1 text-sm font-semibold py-2 px-3 rounded-xl transition-colors tab-active">
+            Todo
+          </button>
+          <button onclick="filtrarFeed('publicacion')" id="tab-publicacion"
+            class="tab-btn flex-1 text-sm font-semibold py-2 px-3 rounded-xl transition-colors text-text-muted hover:text-white flex items-center justify-center gap-1.5">
+            <span class="material-icons-round text-base">article</span>
+            Publicaciones
+          </button>
+          <button onclick="filtrarFeed('reporte')" id="tab-reporte"
+            class="tab-btn flex-1 text-sm font-semibold py-2 px-3 rounded-xl transition-colors text-text-muted hover:text-white flex items-center justify-center gap-1.5">
+            <span class="material-icons-round text-base">report_problem</span>
+            Reportes
+          </button>
+        </div>
+
+        <!-- Feed -->
+        <div id="feed-container" class="space-y-3">
+          <div id="feed-loading" class="bg-surface-dark border border-border-dark rounded-2xl p-10 flex flex-col items-center justify-center gap-3 text-text-muted">
+            <span class="material-icons-round text-3xl animate-spin">refresh</span>
+            <span class="text-sm">Cargando actividad...</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SOS
+══════════════════════════════════════════════════════════ -->
+<button onclick="location.href='panico.html'"
+  class="sos-pulse fixed bottom-8 right-8 z-50 w-16 h-16 bg-sos rounded-full flex flex-col items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform border-4 border-red-400">
+  <span class="material-icons-round text-white text-2xl">emergency</span>
+  <span class="text-white text-[9px] font-black uppercase tracking-wider">SOS</span>
+</button>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL EDITAR PERFIL
+══════════════════════════════════════════════════════════ -->
+<div id="modal-editar" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="bg-surface-dark border border-border-dark rounded-2xl w-full max-w-md mx-4 shadow-2xl">
+    <div class="flex items-center justify-between p-5 border-b border-border-dark">
+      <h3 class="font-bold text-white flex items-center gap-2">
+        <span class="material-icons-round text-primary">edit</span>
+        Editar perfil
+      </h3>
+      <button onclick="cerrarModalEditar()" class="text-text-muted hover:text-white transition-colors p-1">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div>
+        <label class="block text-text-muted text-xs font-semibold uppercase tracking-wider mb-2">
+          <span class="material-icons-round text-sm align-middle mr-1">notes</span>Descripción
+        </label>
+        <textarea id="edit-desc" rows="3" maxlength="500"
+          placeholder="Cuéntanos algo sobre ti..."
+          class="w-full bg-surface-darker border border-border-dark rounded-xl px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-primary/40 resize-none transition-colors"></textarea>
+        <p class="text-right text-text-muted text-xs mt-1"><span id="desc-chars">0</span>/500</p>
+      </div>
+      <div>
+        <label class="block text-text-muted text-xs font-semibold uppercase tracking-wider mb-2">
+          <span class="material-icons-round text-sm align-middle mr-1">phone</span>Teléfono
+        </label>
+        <input type="tel" id="edit-tel" placeholder="+52 55 1234 5678" maxlength="20"
+          class="w-full bg-surface-darker border border-border-dark rounded-xl px-4 py-3 text-sm text-white placeholder-text-muted focus:outline-none focus:border-primary/40 transition-colors"/>
+      </div>
+    </div>
+    <div class="flex gap-3 p-5 border-t border-border-dark">
+      <button onclick="cerrarModalEditar()" class="cn-btn cn-btn-ghost flex-1 justify-center">
+        Cancelar
+      </button>
+      <button onclick="guardarPerfil()" id="btn-guardar" class="cn-btn cn-btn-primary flex-1 justify-center gap-2">
+        <span class="material-icons-round" style="font-size:16px">save</span>
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODAL ERROR DE IMAGEN
+══════════════════════════════════════════════════════════ -->
+<div id="modal-img-error" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="bg-surface-dark border border-border-dark rounded-2xl w-full max-w-sm mx-4 p-6 shadow-2xl">
+    <div class="flex items-center gap-3 mb-4">
+      <div class="w-10 h-10 rounded-xl bg-sos/10 border border-sos/20 flex items-center justify-center flex-shrink-0">
+        <span class="material-icons-round text-sos text-xl">image_not_supported</span>
+      </div>
+      <div>
+        <h3 class="font-bold text-white text-sm">Imagen no válida</h3>
+        <p class="text-text-muted text-xs mt-0.5">Revisa los requisitos</p>
+      </div>
+    </div>
+    <div class="bg-surface-darker rounded-xl p-4 mb-4">
+      <p class="text-sos text-sm font-medium mb-3 flex items-start gap-2">
+        <span class="material-icons-round text-sm mt-0.5 flex-shrink-0">error_outline</span>
+        <span id="img-error-detail">Error desconocido</span>
+      </p>
+      <div class="border-t border-border-dark pt-3 grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <p class="text-text-muted font-semibold mb-1.5">Permitidos:</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-1.5 text-white/70"><span class="material-icons-round text-primary text-sm">check</span>JPG / PNG</div>
+            <div class="flex items-center gap-1.5 text-white/70"><span class="material-icons-round text-primary text-sm">check</span>WEBP</div>
+            <div class="flex items-center gap-1.5 text-white/70"><span class="material-icons-round text-primary text-sm">check</span>Hasta 5 MB</div>
+          </div>
+        </div>
+        <div>
+          <p class="text-text-muted font-semibold mb-1.5">No permitidos:</p>
+          <div class="space-y-1">
+            <div class="flex items-center gap-1.5 text-white/60"><span class="material-icons-round text-sos text-sm">block</span>GIF / SVG</div>
+            <div class="flex items-center gap-1.5 text-white/60"><span class="material-icons-round text-sos text-sm">block</span>HEIC / HEIF</div>
+            <div class="flex items-center gap-1.5 text-white/60"><span class="material-icons-round text-sos text-sm">block</span>&gt; 5 MB</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button onclick="cerrarModalImgError()" class="cn-btn cn-btn-primary w-full justify-center">
+      Entendido
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOAST
+══════════════════════════════════════════════════════════ -->
+<div id="toast" class="fixed bottom-28 right-8 z-50 hidden max-w-xs">
+  <div class="bg-surface-dark border border-border-dark rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
+    <span class="material-icons-round text-xl" id="toast-icon">check_circle</span>
+    <span class="text-sm font-medium text-white" id="toast-msg">Mensaje</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════════ -->
+<script>
+const DJANGO_URL         = 'http://localhost:9000'
+const FLASK_POSTS_URL    = 'http://localhost:9002'
+const FLASK_SDRI_URL     = 'http://localhost:9001'
+
+const token  = localStorage.getItem('token')
+const nombre = localStorage.getItem('usuarioActual') || localStorage.getItem('nombre') || 'Vecino'
+const casa   = localStorage.getItem('numeroCasa') || ''
+const userId = parseInt(localStorage.getItem('userId') || '0')
+const rol    = localStorage.getItem('rolActual') || 'usuario'
+
+const runtime   = window.CentinelaRuntime
+const LOGIN_URL = runtime ? runtime.appUrl('login.html') : 'http://localhost:9300/login.html'
+if (!token) location.href = LOGIN_URL
+
+// ── Sidebar init ──────────────────────────────────────────────
+document.getElementById('sidebar-name').textContent = nombre
+document.getElementById('sidebar-casa').textContent = casa || 'Centinela'
+document.getElementById('sidebar-initial').textContent = nombre.charAt(0).toUpperCase()
+
+// Post & profile initial
+const initChar = nombre.charAt(0).toUpperCase()
+document.getElementById('profile-initial').textContent = initChar
+document.getElementById('post-initial').textContent    = initChar
+
+// ══════════════════════════════════════════════════════════════
+//  COMPRESIÓN DE IMAGEN (cliente — Canvas API)
+// ══════════════════════════════════════════════════════════════
+const TIPOS_PERMITIDOS = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const MAX_BYTES        = 5 * 1024 * 1024   // 5 MB
+
+function comprimirImagen(file, maxPx, calidad) {
+  return new Promise((resolve, reject) => {
+    // Validación de tipo
+    if (!TIPOS_PERMITIDOS.includes(file.type.toLowerCase())) {
+      const ext = (file.name.split('.').pop() || file.type).toUpperCase()
+      reject({ code: 'TIPO', msg: `El formato ${ext} no está permitido. Solo se aceptan JPG, PNG y WEBP.` })
+      return
+    }
+    // Validación de tamaño
+    if (file.size > MAX_BYTES) {
+      reject({ code: 'SIZE', msg: `El archivo pesa ${(file.size/1024/1024).toFixed(1)} MB. El límite es 5 MB.` })
+      return
+    }
+    const objectUrl = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const longSide = Math.max(img.width, img.height)
+      const scale = longSide > maxPx ? maxPx / longSide : 1
+      const w = Math.round(img.width  * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width  = w
+      canvas.height = h
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h)
+      resolve(canvas.toDataURL('image/jpeg', calidad))
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject({ code: 'READ', msg: 'No se pudo leer el archivo. Prueba con otra imagen.' })
+    }
+    img.src = objectUrl
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════════════════
+let _toastTimer = null
+function toast(msg, tipo = 'ok') {
+  const el   = document.getElementById('toast')
+  const icon = document.getElementById('toast-icon')
+  icon.textContent = tipo === 'ok' ? 'check_circle' : 'error_outline'
+  icon.className   = `material-icons-round text-xl ${tipo === 'ok' ? 'text-primary' : 'text-sos'}`
+  document.getElementById('toast-msg').textContent = msg
+  el.classList.remove('hidden')
+  el.classList.add('flex')
+  clearTimeout(_toastTimer)
+  _toastTimer = setTimeout(() => { el.classList.add('hidden'); el.classList.remove('flex') }, 3500)
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODAL ERROR IMAGEN
+// ══════════════════════════════════════════════════════════════
+function mostrarImgError(msg) {
+  document.getElementById('img-error-detail').textContent = msg
+  const m = document.getElementById('modal-img-error')
+  m.classList.remove('hidden')
+  m.classList.add('flex')
+}
+function cerrarModalImgError() {
+  const m = document.getElementById('modal-img-error')
+  m.classList.add('hidden')
+  m.classList.remove('flex')
+}
+document.getElementById('modal-img-error').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalImgError()
+})
+
+// ══════════════════════════════════════════════════════════════
+//  CARGA DE DATOS DE PERFIL (Django)
+// ══════════════════════════════════════════════════════════════
+window._perfil = {}
+
+async function cargarPerfil() {
+  try {
+    const r = await fetch(`${DJANGO_URL}/api/perfil/`, {
+      headers: { 'Authorization': `Token ${token}` }
+    })
+    if (!r.ok) throw new Error('no-perfil')
+    const d = await r.json()
+    window._perfil = d
+
+    const nombreFull = d.nombre || nombre
+    document.getElementById('profile-name').textContent = nombreFull
+    document.getElementById('profile-role').textContent =
+      d.casa ? `Residente · ${d.casa}` : 'Vecino Centinela'
+    document.getElementById('stat-casa').textContent = d.casa || '—'
+
+    if (d.descripcion) {
+      document.getElementById('profile-bio').textContent = d.descripcion
+      document.getElementById('profile-bio').style.display = ''
+      document.getElementById('btn-agregar-bio').style.display = 'none'
+    } else {
+      document.getElementById('btn-agregar-bio').style.display = 'flex'
+    }
+
+    document.getElementById('info-email').textContent = d.email || '—'
+    document.getElementById('info-tel').textContent   = d.telefono || 'Sin teléfono registrado'
+    document.getElementById('info-casa').textContent  = d.casa ? `Casa ${d.casa}` : '—'
+    document.getElementById('info-rol').textContent   =
+      rol === 'admin' ? 'Administrador' : 'Vecino Centinela'
+
+    if (d.fecha_registro) {
+      const fecha = new Date(d.fecha_registro)
+      document.getElementById('stat-fecha').textContent =
+        'Miembro desde ' + fecha.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' })
+    }
+    if (d.foto_perfil) setAvatar(d.foto_perfil)
+    if (d.foto_portada) setPortada(d.foto_portada)
+
+  } catch (e) {
+    // Fallback a localStorage
+    document.getElementById('profile-name').textContent = nombre
+    document.getElementById('profile-role').textContent = casa ? `Residente · ${casa}` : 'Vecino Centinela'
+    document.getElementById('stat-casa').textContent    = casa || '—'
+    document.getElementById('info-casa').textContent    = casa || '—'
+    const em = localStorage.getItem('email') || ''
+    if (em) document.getElementById('info-email').textContent = em
+    document.getElementById('btn-agregar-bio').style.display = 'flex'
+  }
+}
+
+// ── Avatar helpers ────────────────────────────────────────────
+function setAvatar(dataUrl) {
+  ['avatar-img', 'post-avatar-img', 'sidebar-avatar-img'].forEach(id => {
+    const img = document.getElementById(id)
+    img.src = dataUrl
+    img.classList.remove('hidden')
+  })
+  document.getElementById('profile-initial').classList.add('hidden')
+  document.getElementById('post-initial').classList.add('hidden')
+  document.getElementById('sidebar-initial').classList.add('hidden')
+}
+
+function setPortada(dataUrl) {
+  const img = document.getElementById('cover-img')
+  img.src = dataUrl
+  img.classList.remove('hidden')
+  document.getElementById('cover-placeholder-btn').classList.add('hidden')
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SUBIDA DE AVATAR
+// ══════════════════════════════════════════════════════════════
+document.getElementById('input-avatar').addEventListener('change', async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  e.target.value = ''
+  try {
+    const dataUrl = await comprimirImagen(file, 512, 0.8)
+    setAvatar(dataUrl)
+    await subirFotoPerfil('foto_perfil', dataUrl, 'Foto de perfil actualizada')
+  } catch (err) {
+    mostrarImgError(err.msg || 'Error al procesar la imagen.')
+  }
+})
+
+// ══════════════════════════════════════════════════════════════
+//  SUBIDA DE PORTADA
+// ══════════════════════════════════════════════════════════════
+document.getElementById('input-portada').addEventListener('change', async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  e.target.value = ''
+  try {
+    const dataUrl = await comprimirImagen(file, 1280, 0.8)
+    setPortada(dataUrl)
+    await subirFotoPerfil('foto_portada', dataUrl, 'Foto de portada actualizada')
+  } catch (err) {
+    mostrarImgError(err.msg || 'Error al procesar la imagen.')
+  }
+})
+
+async function subirFotoPerfil(campo, dataUrl, msgOk) {
+  try {
+    const r = await fetch(`${DJANGO_URL}/api/perfil/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+      body: JSON.stringify({ [campo]: dataUrl })
+    })
+    toast(r.ok ? msgOk : 'No se pudo guardar la foto', r.ok ? 'ok' : 'error')
+  } catch (e) {
+    toast('Sin conexión con el servidor', 'error')
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  MODAL EDITAR PERFIL
+// ══════════════════════════════════════════════════════════════
+function abrirModalEditar() {
+  const d = window._perfil || {}
+  const descEl = document.getElementById('edit-desc')
+  const telEl  = document.getElementById('edit-tel')
+  descEl.value = d.descripcion || ''
+  telEl.value  = d.telefono    || ''
+  document.getElementById('desc-chars').textContent = descEl.value.length
+  const m = document.getElementById('modal-editar')
+  m.classList.remove('hidden')
+  m.classList.add('flex')
+  setTimeout(() => descEl.focus(), 50)
+}
+
+function cerrarModalEditar() {
+  const m = document.getElementById('modal-editar')
+  m.classList.add('hidden')
+  m.classList.remove('flex')
+}
+
+document.getElementById('edit-desc').addEventListener('input', function() {
+  document.getElementById('desc-chars').textContent = this.value.length
+})
+
+document.getElementById('modal-editar').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModalEditar()
+})
+
+async function guardarPerfil() {
+  const desc = document.getElementById('edit-desc').value.trim()
+  const tel  = document.getElementById('edit-tel').value.trim()
+  const btn  = document.getElementById('btn-guardar')
+  btn.disabled = true
+  btn.innerHTML = '<span class="material-icons-round text-sm animate-spin">refresh</span> Guardando...'
+
+  try {
+    const r = await fetch(`${DJANGO_URL}/api/perfil/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+      body: JSON.stringify({ descripcion: desc, telefono: tel })
+    })
+    if (r.ok) {
+      if (!window._perfil) window._perfil = {}
+      window._perfil.descripcion = desc
+      window._perfil.telefono    = tel
+
+      const bioEl = document.getElementById('profile-bio')
+      const addBtn = document.getElementById('btn-agregar-bio')
+      if (desc) {
+        bioEl.textContent = desc
+        bioEl.style.display = ''
+        addBtn.style.display = 'none'
+      } else {
+        bioEl.style.display = 'none'
+        addBtn.style.display = 'flex'
+      }
+      document.getElementById('info-tel').textContent = tel || 'Sin teléfono registrado'
+
+      cerrarModalEditar()
+      toast('Perfil actualizado')
+    } else {
+      toast('Error al guardar los cambios', 'error')
+    }
+  } catch (e) {
+    toast('Sin conexión con el servidor', 'error')
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = '<span class="material-icons-round text-sm">save</span> Guardar'
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NUEVA PUBLICACIÓN CON IMAGEN
+// ══════════════════════════════════════════════════════════════
+let _postImgData = null
+
+document.getElementById('input-post-img').addEventListener('change', async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  e.target.value = ''
+  document.getElementById('post-img-error').classList.add('hidden')
+  try {
+    const dataUrl = await comprimirImagen(file, 1024, 0.82)
+    _postImgData = dataUrl
+    document.getElementById('post-img-preview').src = dataUrl
+    document.getElementById('post-img-preview-wrap').classList.remove('hidden')
+  } catch (err) {
+    document.getElementById('post-img-error-msg').textContent = err.msg || 'Imagen no válida'
+    document.getElementById('post-img-error').classList.remove('hidden')
+  }
+})
+
+function quitarImagenPost() {
+  _postImgData = null
+  document.getElementById('post-img-preview-wrap').classList.add('hidden')
+  document.getElementById('post-img-preview').src = ''
+  document.getElementById('post-img-error').classList.add('hidden')
+}
+
+async function publicar() {
+  const texto = document.getElementById('nuevo-post-texto').value.trim()
+  if (!texto && !_postImgData) {
+    toast('Escribe algo o adjunta una imagen', 'error')
+    return
+  }
+  const media  = _postImgData ? [{ type: 'image', url: _postImgData, name: 'foto.jpg' }] : []
+  const btn    = document.getElementById('btn-publicar')
+  btn.disabled = true
+  btn.innerHTML = '<span class="material-icons-round text-sm animate-spin">refresh</span>'
+
+  try {
+    const r = await fetch(`${FLASK_POSTS_URL}/posts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+      body: JSON.stringify({ titulo: texto.substring(0, 40) || 'Publicación', contenido: texto, media })
+    })
+    if (r.ok) {
+      document.getElementById('nuevo-post-texto').value = ''
+      document.getElementById('nuevo-post-texto').style.height = 'auto'
+      quitarImagenPost()
+      toast('Publicación enviada a revisión')
+      cargarActividad()
+    } else {
+      const err = await r.json().catch(() => ({}))
+      toast(err.error || 'Error al publicar', 'error')
+    }
+  } catch (e) {
+    toast('Sin conexión con el servidor de publicaciones', 'error')
+  } finally {
+    btn.disabled = false
+    btn.innerHTML = '<span class="material-icons-round text-sm">send</span> Publicar'
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  HISTORIAL DE ACTIVIDAD (muro)
+// ══════════════════════════════════════════════════════════════
+let _todasActividades = []
+
+async function cargarActividad() {
+  const loading = document.getElementById('feed-loading')
+  loading.classList.remove('hidden')
+  document.querySelectorAll('.feed-card').forEach(el => el.remove())
+
+  let actividades = []
+  let totalPosts   = 0
+  let totalReportes = 0
+
+  // ── 1. Publicaciones del usuario (Flask :9002) ──
+  try {
+    const r = await fetch(`${FLASK_POSTS_URL}/posts/mine`, {
+      headers: { 'Authorization': `Token ${token}` }
+    })
+    if (r.ok) {
+      const posts = await r.json()
+      totalPosts = posts.length
+      posts.forEach(p => actividades.push({
+        tipo:       'publicacion',
+        titulo:     p.titulo || 'Publicación sin título',
+        preview:    p.contenido || '',
+        fecha:      p.created_at || '',
+        estado:     p.status || 'pending',
+        imagen:     (p.media && p.media.length && p.media[0].type === 'image') ? p.media[0].url : null,
+        likes:      p.like_count || 0,
+        comentarios: p.comment_count || 0,
+        link:       'publicaciones.html'
+      }))
+    }
+  } catch (e) { /* servicio no disponible */ }
+
+  // ── 2. Reportes/Incidencias del usuario (SDRI :9001) ──
+  try {
+    const r = await fetch(
+      `${FLASK_SDRI_URL}/api/consultar_incidencias?usuario=${encodeURIComponent(nombre)}`
+    )
+    if (r.ok) {
+      const xmlText = await r.text()
+      const doc     = new DOMParser().parseFromString(xmlText, 'application/xml')
+      const items   = doc.querySelectorAll('incidencia')
+      totalReportes = items.length
+      items.forEach(item => {
+        const fecha = item.querySelector('fecha')?.textContent?.trim() || ''
+        const hora  = item.querySelector('hora')?.textContent?.trim()  || '00:00'
+        actividades.push({
+          tipo:      'reporte',
+          titulo:    (item.querySelector('tipo')?.textContent?.trim() || 'Reporte de incidencia'),
+          preview:   item.querySelector('descripcion')?.textContent?.trim() || '',
+          fecha:     fecha ? `${fecha}T${hora}` : '',
+          estado:    item.querySelector('estado')?.textContent?.trim()    || 'Abierto',
+          prioridad: item.querySelector('prioridad')?.textContent?.trim() || 'Baja',
+          categoria: item.querySelector('categoria')?.textContent?.trim() || 'seguridad',
+          imagen:    null,
+          link:      'avisos.html'
+        })
+      })
+    }
+  } catch (e) { /* servicio no disponible */ }
+
+  // ── Actualizar stats ──────────────────────────────────────
+  document.getElementById('stat-posts').textContent    = totalPosts
+  document.getElementById('stat-reportes').textContent = totalReportes
+
+  // ── Ordenar por fecha descendente ─────────────────────────
+  actividades.sort((a, b) => {
+    const da = a.fecha ? new Date(a.fecha) : new Date(0)
+    const db = b.fecha ? new Date(b.fecha) : new Date(0)
+    return db - da
+  })
+
+  _todasActividades = actividades
+  loading.classList.add('hidden')
+  renderFeed(actividades)
+}
+
+// ── Filtros de tabs ───────────────────────────────────────────
+function filtrarFeed(tipo) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('tab-active')
+    btn.classList.add('text-text-muted')
+  })
+  const activeTab = document.getElementById(`tab-${tipo}`)
+  if (activeTab) {
+    activeTab.classList.add('tab-active')
+    activeTab.classList.remove('text-text-muted')
+  }
+  const filtradas = tipo === 'all'
+    ? _todasActividades
+    : _todasActividades.filter(a => a.tipo === tipo)
+  renderFeed(filtradas)
+}
+
+// ── Config visual por tipo ────────────────────────────────────
+const TIPO_CFG = {
+  publicacion: { icon: 'article',         color: 'text-primary',     bg: 'bg-primary/10',     label: 'Publicación' },
+  reporte:     { icon: 'report_problem',  color: 'text-yellow-400',  bg: 'bg-yellow-400/10',  label: 'Reporte' }
+}
+
+const ESTADO_CFG = {
+  approved:  { label: 'Aprobada',    cls: 'text-primary bg-primary/10 border-primary/20' },
+  pending:   { label: 'En revisión', cls: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
+  rejected:  { label: 'Rechazada',   cls: 'text-sos bg-sos/10 border-sos/20' },
+  Abierto:   { label: 'Abierto',     cls: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20' },
+  Resuelto:  { label: 'Resuelto',    cls: 'text-primary bg-primary/10 border-primary/20' },
+  Archivado: { label: 'Archivado',   cls: 'text-text-muted bg-surface-darker border-border-dark' }
+}
+
+function formatFecha(fechaStr) {
+  if (!fechaStr) return ''
+  try {
+    const d    = new Date(fechaStr)
+    if (isNaN(d.getTime())) return fechaStr
+    const diff = Date.now() - d.getTime()
+    if (diff < 60_000)       return 'hace un momento'
+    if (diff < 3_600_000)    return `hace ${Math.floor(diff / 60_000)} min`
+    if (diff < 86_400_000)   return `hace ${Math.floor(diff / 3_600_000)} h`
+    if (diff < 604_800_000)  return `hace ${Math.floor(diff / 86_400_000)} d`
+    return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch (_) { return fechaStr }
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function renderFeed(actividades) {
+  const container = document.getElementById('feed-container')
+  container.querySelectorAll('.feed-card').forEach(el => el.remove())
+
+  if (!actividades.length) {
+    const empty = document.createElement('div')
+    empty.className = 'feed-card bg-surface-dark border border-border-dark rounded-2xl p-10 flex flex-col items-center gap-3 text-text-muted'
+    empty.innerHTML = `
+      <span class="material-icons-round text-4xl">inbox</span>
+      <p class="text-sm font-medium">Sin actividad en esta categoría</p>
+      <p class="text-xs text-center max-w-xs">Crea una publicación desde aquí o reporta una incidencia para que aparezca en tu historial</p>
+    `
+    container.appendChild(empty)
+    return
+  }
+
+  actividades.forEach((act, i) => {
+    const cfg     = TIPO_CFG[act.tipo]     || TIPO_CFG.publicacion
+    const estCfg  = ESTADO_CFG[act.estado] || { label: act.estado || '—', cls: 'text-text-muted bg-surface-darker border-border-dark' }
+
+    // Meta extra por tipo
+    let metaHtml = ''
+    if (act.tipo === 'publicacion') {
+      metaHtml = `
+        <div class="flex items-center gap-4 mt-3 text-xs text-text-muted">
+          <span class="flex items-center gap-1">
+            <span class="material-icons-round text-sm">favorite_border</span>${act.likes}
+          </span>
+          <span class="flex items-center gap-1">
+            <span class="material-icons-round text-sm">chat_bubble_outline</span>${act.comentarios}
+          </span>
+        </div>`
+    } else if (act.tipo === 'reporte') {
+      const prioCls = act.prioridad === 'Alta' ? 'text-sos' : act.prioridad === 'Media' ? 'text-yellow-400' : 'text-text-muted'
+      metaHtml = `
+        <div class="flex items-center gap-3 mt-2 text-xs">
+          <span class="flex items-center gap-1 ${prioCls}">
+            <span class="material-icons-round text-sm">priority_high</span>${act.prioridad || 'Baja'}
+          </span>
+          <span class="text-text-muted capitalize">${act.categoria || 'seguridad'}</span>
+        </div>`
+    }
+
+    const imgHtml = act.imagen
+      ? `<img src="${escHtml(act.imagen)}" alt="" loading="lazy"
+           class="mt-3 max-h-48 w-full object-cover rounded-xl border border-border-dark"/>`
+      : ''
+
+    const card = document.createElement('div')
+    card.className = 'feed-card bg-surface-dark border border-border-dark rounded-2xl p-5 hover:border-primary/20 transition-all cursor-pointer'
+    card.style.animationDelay = `${i * 40}ms`
+    card.onclick = () => location.href = act.link
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-start gap-3 flex-1 min-w-0">
+          <div class="w-9 h-9 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5">
+            <span class="material-icons-round ${cfg.color} text-base">${cfg.icon}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-1">
+              <span class="text-[10px] font-bold uppercase tracking-widest ${cfg.color}">${cfg.label}</span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full border ${estCfg.cls}">${estCfg.label}</span>
+            </div>
+            <p class="text-sm font-semibold text-white truncate">${escHtml(act.titulo)}</p>
+            ${act.preview ? `<p class="text-xs text-text-muted mt-1 line-clamp-2">${escHtml(act.preview)}</p>` : ''}
+            ${imgHtml}
+            ${metaHtml}
+          </div>
+        </div>
+        <span class="text-[11px] text-text-muted flex-shrink-0 mt-0.5 whitespace-nowrap">${formatFecha(act.fecha)}</span>
+      </div>
+    `
+    container.appendChild(card)
+  })
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SESIÓN
+// ══════════════════════════════════════════════════════════════
+function cerrarSesion(e) {
+  e.stopPropagation()
+  localStorage.clear()
+  location.href = LOGIN_URL
+}
+function confirmarCerrarSesion() {
+  if (confirm('¿Cerrar sesión?')) { localStorage.clear(); location.href = LOGIN_URL }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+cargarPerfil()
+cargarActividad()
+</script>
+<script src="js/sos-draggable.js" onerror="void 0"></script>
+<script>fetch('asistente.html').then(r=>r.text()).then(h=>{document.body.insertAdjacentHTML('beforeend',h);const s=document.createElement('script');s.src='js/asistente.js';document.body.appendChild(s);}).catch(()=>{})</script>
+</body>
+</html>
