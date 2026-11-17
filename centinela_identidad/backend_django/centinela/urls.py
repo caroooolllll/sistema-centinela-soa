@@ -11,6 +11,8 @@ from centinela.asistente import feria as _feria
 _feria.iniciar()
 from biometria import startup as _bio_startup
 _bio_startup.iniciar()
+from automatizacion import startup as _auto_startup
+_auto_startup.iniciar()
 
 urlpatterns = [
     # Pipeline rápido del asistente (streaming + voz)
@@ -21,6 +23,7 @@ urlpatterns = [
     path('api/ia/estado/', asistente_views.estado),
     path('', include('auth_app.urls')),
     path('', include('biometria.urls')),
+    path('', include('automatizacion.urls')),
     path('api/ia/chat/', views_ia.chat_ia),
     path('api/ia/extraer-reporte/', views_ia.extraer_reporte_ia),
     path('api/ia/analizar-foto/', views_ia.analizar_foto_ia),

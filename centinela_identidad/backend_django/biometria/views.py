@@ -63,12 +63,20 @@ def _sesion(request, permitir_pendiente=False):
 
 
 def _log(usuario, evento, resultado, origen, score=None, detalle='', demo=False):
-    return BitacoraAcceso.objects.create(
+    b = BitacoraAcceso.objects.create(
         usuario=usuario, nombre=usuario.nombre_completo if usuario else '',
         casa=usuario.casa.numero_casa if usuario and usuario.casa else '',
         evento=evento, resultado=resultado, origen=origen,
         score=None if score is None else round(float(score), 4),
         detalle=detalle[:300], es_demo=bool(demo or es_demo_usuario(usuario)))
+    from automatizacion import cadena           # cadena de hash: cada evento sella al anterior
+    cadena.sellar_bitacora(b)
+    try:
+        from automatizacion import servicios    # reglas + alertas de anomalías (nunca deben romper el flujo)
+        servicios.al_registrar_acceso(b)
+    except Exception:
+        pass
+    return b
 
 
 def _err(msg, status=400, **extra):

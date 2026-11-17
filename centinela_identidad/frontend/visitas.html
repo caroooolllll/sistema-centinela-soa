@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mis visitas (QR) — Centinela</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0D1C19;--card:#12241f;--line:#1E3330;--pri:#0DF2CC;--txt:#d0ece8;--mut:#6B9E96}
+@media (prefers-color-scheme: light){:root{--bg:#f1f8f6;--card:#fff;--line:#cfe3de;--pri:#07a58c;--txt:#12332d;--mut:#4d7a72}}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Outfit','Segoe UI',sans-serif;padding:16px}
+.w{max-width:560px;margin:auto}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+h1,h2{color:var(--pri);margin:0 0 10px}h1{font-size:20px}h2{font-size:15px}label{display:block;font-size:12px;color:var(--mut);margin-top:8px}
+input,select,button{width:100%;padding:9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--txt);font-family:inherit;font-size:14px;margin-top:3px}
+button{background:var(--pri);color:#062a24;border:none;font-weight:700;cursor:pointer;margin-top:12px}a{color:var(--pri)}
+#qr{text-align:center}#qr svg,#qr img{width:240px;background:#fff;padding:10px;border-radius:12px}.it{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.it small{color:var(--mut);display:block}
+</style></head><body><div class="w">
+<h1>🎟️ Mis visitas con QR <a href="dashboard.html" style="font-size:13px;float:right">← Volver</a></h1>
+<div class="card"><h2>Registrar una visita</h2>
+<label>Nombre de tu visita</label><input id="nom" placeholder="Ej. Tío Pepe">
+<label>Fecha</label><input id="fec" type="date"><label>Hora de llegada</label><input id="hor" type="time">
+<label>Vigencia</label><select id="dur"><option value="60">1 hora</option><option value="240" selected>4 horas</option><option value="720">12 horas</option></select>
+<button id="go">Generar QR de un solo uso</button><div id="msg" style="font-size:13px;margin-top:8px;color:var(--mut)"></div></div>
+<div class="card" id="qrCard" style="display:none"><h2>Tu QR</h2><div id="qr"></div>
+<p style="font-size:12px;color:var(--mut)">Enséñalo a la cámara del Portón. Sirve <b>una sola vez</b> y vence a las <span id="vence"></span>. No se puede volver a mostrar: si lo pierdes, genera otro.</p></div>
+<div class="card"><h2>Mis visitas</h2><div id="lista">…</div></div></div>
+<script src="vendor/libs/qrcode.js"></script>
+<script>
+const API = `http://${location.hostname || 'localhost'}:9000/api/auto/visitas/`, tk = () => localStorage.getItem('token') || '';
+const $ = (i) => document.getElementById(i), H = { 'Content-Type': 'application/json' };
+const ahora = new Date(); $('fec').value = ahora.toISOString().slice(0, 10); $('hor').value = ahora.toTimeString().slice(0, 5);
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function lista() {
+  const r = await fetch(API, { headers: { ...H, Authorization: `Token ${tk()}` } }).then(x => x.json()).catch(() => ({}));
+  $('lista').innerHTML = (r.items || []).map(v => `<div class="it"><b>${esc(v.nombre)}</b> ${v.usado ? '✅ usado' : v.vencida ? '⌛ vencido' : '🟢 vigente'}<small>${v.desde} → ${v.hasta}</small></div>`).join('') || (r.estado === 'ERROR' ? 'Inicia sesión para ver tus visitas.' : 'Aún no registras visitas.');
+}
+$('go').onclick = async () => {
+  const r = await fetch(API, { method: 'POST', headers: { ...H, Authorization: `Token ${tk()}` },
+    body: JSON.stringify({ nombre: $('nom').value, fecha: $('fec').value, hora: $('hor').value, duracion_min: +$('dur').value }) }).then(x => x.json()).catch(() => ({ estado: 'ERROR', mensaje: 'Sin conexión' }));
+  if (r.estado !== 'OK') { $('msg').textContent = r.mensaje || 'Error'; return; }
+  const q = qrcode(0, 'M'); q.addData(r.qr); q.make(); $('qr').innerHTML = q.createSvgTag({ scalable: true });
+  $('vence').textContent = r.valido_hasta; $('qrCard').style.display = ''; $('msg').textContent = 'QR generado.'; lista();
+};
+lista();
+</script></body></html>

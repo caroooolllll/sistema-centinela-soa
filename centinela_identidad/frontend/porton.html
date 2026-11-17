@@ -53,6 +53,7 @@
     </div>
   </aside>
 </main>
+<script src="vendor/libs/jsQR.js"></script>
 <script src="js/biometria-core.js"></script>
 <script>
 (function () {
@@ -107,6 +108,33 @@
       return `<div class="it ${cls}">${t}<small>${i.fecha}${i.es_demo ? ' · demo' : ''}${i.score != null ? ' · similitud ' + i.score : ''}</small></div>`;
     }).join('') : '<div class="it">Sin movimientos todavía</div>';
   }
+
+  // ── Lectura de QR de visitas (un solo uso, con vencimiento) ──────────────
+  let ultimoQR = '', ultimoQRt = 0;
+  const qc = document.createElement('canvas'), qx = qc.getContext('2d', { willReadFrequently: true });
+  setInterval(async () => {
+    if (!motor || !motor.activo || ocupado || !window.jsQR || motor.video.readyState < 2) return;
+    qc.width = motor.video.videoWidth; qc.height = motor.video.videoHeight;
+    qx.drawImage(motor.video, 0, 0);
+    const img = qx.getImageData(0, 0, qc.width, qc.height);
+    const c = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (!c || !c.data.startsWith('CENTINELA-VISITA:')) return;
+    if (c.data === ultimoQR && Date.now() - ultimoQRt < 6000) return;
+    ultimoQR = c.data; ultimoQRt = Date.now(); ocupado = true;
+    const base = `${location.protocol}//${location.hostname || 'localhost'}:9000/api/auto/visitas/validar/`;
+    const tk = localStorage.getItem('token') || '';
+    const r = await fetch(base, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(tk ? { Authorization: `Token ${tk}` } : {}) }, body: JSON.stringify({ qr: c.data }) })
+      .then(x => x.json()).catch(() => ({ estado: 'ERROR' }));
+    if (r.concedido) {
+      estado(`Acceso concedido: visita «${r.visita}»`, 'ok', `Invitado de ${r.casa || 'un vecino'} · QR de un solo uso`);
+      tono([660, 880, 1100]); hablar('Acceso concedido. Bienvenido.');
+      $('gate').className = 'abierto'; await new Promise(res => setTimeout(res, 4500)); $('gate').className = 'cerrado';
+    } else {
+      estado('QR denegado', 'no', r.motivo || 'No se pudo validar'); tono([300, 220], 0.25, 'sawtooth'); hablar('Acceso denegado. ' + (r.motivo || ''));
+      await new Promise(res => setTimeout(res, 3500));
+    }
+    cargarBitacora(); ocupado = false;
+  }, 300);
 
   $('btnIniciar').onclick = async () => {
     $('btnIniciar').disabled = true; ac && ac.resume();

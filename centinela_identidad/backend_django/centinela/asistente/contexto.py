@@ -20,6 +20,11 @@ _TTL_OK = 20.0       # el resultado se reutiliza 20 s
 _TTL_FALLO = 30.0    # si el SDRI está caído no se reintenta en 30 s (no frena al asistente)
 
 
+def _limpio(t):
+    from automatizacion.servicios import sanitizar_dato
+    return sanitizar_dato(t, 120)
+
+
 def necesita_contexto(texto):
     n = normalizar(texto)
     return bool(_DISPARADORES.search(n)) and not _CREAR.search(n)
@@ -47,7 +52,7 @@ def avisos_recientes(max_items=8, dias=3):
             f = None
         if f and f < limite:
             continue
-        filas.append(f"- {g('fecha')} {g('hora')[:5]} [{g('prioridad')}] {g('tipo')}: {g('descripcion')[:120]} ({g('estado')})")
+        filas.append(f"- {g('fecha')} {g('hora')[:5]} [{g('prioridad')}] {g('tipo')}: {_limpio(g('descripcion'))} ({g('estado')})")
         if len(filas) >= max_items:
             break
     datos = "\n".join(filas)

@@ -19,6 +19,8 @@ NAV_PAGINAS = {
     "publicaciones.html": ["publicaciones", "publicacion", "posts", "foros", "foro"],
     "emergencia-contactos.html": ["contactos de emergencia", "contactos", "directorio", "directorio de emergencia"],
     "porton.html": ["porton", "porton inteligente", "puerta", "acceso facial", "camara de acceso"],
+    "centro-mando.html": ["centro de mando", "panel de control", "mando"],
+    "visitas.html": ["mis visitas", "visitas", "qr de visita", "invitados"],
 }
 NOMBRES = {
     "dashboard.html": "el inicio", "chat.html": "el chat", "eventos.html": "los eventos",
@@ -29,6 +31,8 @@ NOMBRES = {
     "notificaciones.html": "las notificaciones", "publicaciones.html": "las publicaciones",
     "emergencia-contactos.html": "los contactos de emergencia",
     "porton.html": "el portón inteligente",
+    "centro-mando.html": "el centro de mando",
+    "visitas.html": "tus visitas con QR",
 }
 VERBOS_NAV = [
     "abre", "abrir", "abreme", "ve a", "ve al", "vete a", "ir a", "ir al", "llevame a", "llevame al",

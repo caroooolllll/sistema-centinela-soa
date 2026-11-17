@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     'biometria',        # reconocimiento facial con prueba de vida
+    'automatizacion',   # centro de mando: bandeja inteligente, visitas QR, reglas, anomalías
 ]
 
 MIDDLEWARE = [

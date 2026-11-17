@@ -483,6 +483,13 @@ def obtener_posts():
     return jsonify(data)
 
 
+def _avisar_automatizacion(tipo, detalle):
+    try:
+        requests.post(f"{CENTINELA_URL}/api/auto/acciones/", json={"tipo": tipo, "detalle": detalle}, timeout=2)
+    except Exception:
+        pass
+
+
 @posts_bp.route("/posts", methods=["POST"])
 @requiere_token
 def crear_post():
@@ -516,20 +523,43 @@ def crear_post():
         ),
     )
     post_id = cursor.lastrowid
+    # Moderación automática: solo lo dudoso llega al administrador
+    from moderacion_auto import moderar
+    decision, motivo = moderar(titulo, contenido)
+    if decision == "aprobar":
+        conn.execute("UPDATE posts SET status='approved', reviewed_at=?, reviewed_by=?, rejection_reason=NULL WHERE id=?",
+                     (utc_now_iso(), "Centinela (automatico)", post_id))
+    elif decision == "bloquear":
+        conn.execute("UPDATE posts SET status='rejected', reviewed_at=?, reviewed_by=?, rejection_reason=? WHERE id=?",
+                     (utc_now_iso(), "Centinela (automatico)", motivo, post_id))
     post = get_post_row(conn, post_id)
-    create_admin_notification(
-        conn,
-        "post_pending",
-        "Nueva publicacion pendiente",
-        f"{usuario.get('nombre') or 'Un vecino'} envio una publicacion para revision.",
-        "admin.html",
-        post_id,
-    )
+    if decision == "revision":
+        create_admin_notification(
+            conn,
+            "post_pending",
+            "Publicacion pendiente de revision",
+            f"{usuario.get('nombre') or 'Un vecino'} envio una publicacion. Motivo: {motivo}",
+            "admin.html",
+            post_id,
+        )
+    else:
+        create_notification(
+            conn, usuario.get("id"), {"id": 0, "nombre": "Centinela"},
+            "post_approved" if decision == "aprobar" else "post_rejected",
+            "Tu publicacion fue aprobada" if decision == "aprobar" else "Tu publicacion necesita cambios",
+            motivo, "publicaciones.html", post_id,
+        )
     conn.commit()
     payload = serialize_post(post, conn, usuario)
     conn.close()
+    if decision != "revision":   # anotar "resuelta por Centinela" (minutos ahorrados) sin bloquear la respuesta
+        import threading
+        threading.Thread(target=lambda: _avisar_automatizacion("post", f"Publicacion {decision} automaticamente: {motivo}"),
+                         daemon=True).start()
 
-    return jsonify({"mensaje": "Post enviado a revision", "post": payload}), 201
+    mensajes = {"aprobar": "Post publicado", "bloquear": "Post bloqueado: " + motivo,
+                "revision": "Post enviado a revision: " + motivo}
+    return jsonify({"mensaje": mensajes[decision], "decision": decision, "motivo": motivo, "post": payload}), 201
 
 
 @posts_bp.route("/posts/mine", methods=["GET"])

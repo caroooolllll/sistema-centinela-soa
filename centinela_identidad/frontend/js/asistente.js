@@ -303,6 +303,11 @@
     switch (data.tipo) {
 
       case 'emergencia':
+        // Si lo pidió el LLM (no el atajo local) no se activa solo: se pide confirmación
+        if (data.requiere_confirmacion && !confirm('El asistente detectó una posible emergencia. ¿Abrir el botón de pánico?')) {
+          if (!yaHablado) decir(resp);
+          break;
+        }
         if (!yaHablado) { agregarMsg('bot', '🚨 ' + resp); hablar(resp); }
         irA('panico.html', 0, true);
         break;

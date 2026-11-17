@@ -90,6 +90,15 @@ def reportar_incidencia():
         conn.commit()
         nuevo_id = cursor.lastrowid
         conn.close()
+        # Bandeja inteligente (Centinela): triage automático. Nunca debe afectar la respuesta del SDRI.
+        try:
+            import threading, requests
+            carga = dict(sdri_id=nuevo_id, usuario=usuario, descripcion=descripcion, prioridad=prioridad,
+                         categoria=categoria, tipo=tipo, latitud=latitud, longitud=longitud)
+            threading.Thread(target=lambda: requests.post('http://127.0.0.1:9000/api/auto/incidentes/ingresar/',
+                                                          json=carga, timeout=3), daemon=True).start()
+        except Exception:
+            pass
         response = xml_response('reporteResponse', 'OK', f'Incidencia {nuevo_id} creada')
         status_code = 201
     except Exception as e:

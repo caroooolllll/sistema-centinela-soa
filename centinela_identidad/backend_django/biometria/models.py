@@ -29,6 +29,9 @@ class BitacoraAcceso(models.Model):
     score = models.FloatField(null=True, blank=True)
     detalle = models.TextField(blank=True)
     es_demo = models.BooleanField(default=False)
+    # Cadena de hash (una por cada valor de es_demo, para que borrar lo demo no rompa la cadena real)
+    hash_prev = models.CharField(max_length=64, blank=True)
+    hash = models.CharField(max_length=64, blank=True)
 
     class Meta:
         db_table = 'biometria_bitacora'

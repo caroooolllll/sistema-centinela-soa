@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Centro de mando — Centinela</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0D1C19;--card:#12241f;--line:#1E3330;--pri:#0DF2CC;--txt:#d0ece8;--mut:#6B9E96;--bad:#ff6b6b;--warn:#FFD84D;--ok:#7CFFB2;--h0:#16302a;--h1:#0DF2CC}
+  @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#f1f8f6;--card:#fff;--line:#cfe3de;--pri:#07a58c;--txt:#12332d;--mut:#4d7a72;--h0:#e3f3ef;--h1:#07a58c}}
+  :root[data-theme="light"]{--bg:#f1f8f6;--card:#fff;--line:#cfe3de;--pri:#07a58c;--txt:#12332d;--mut:#4d7a72;--h0:#e3f3ef;--h1:#07a58c}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:'Outfit','Segoe UI',sans-serif}
+  header{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:20px;color:var(--pri)}a{color:var(--pri);text-decoration:none}
+  button,select,input{font-family:inherit;font-size:13px;padding:7px 12px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer}
+  button.pri{background:var(--pri);color:#062a24;border:none;font-weight:700}button.pel{border-color:var(--bad);color:var(--bad)}
+  main{padding:16px;display:grid;gap:14px;grid-template-columns:repeat(12,1fr);max-width:1400px;margin:auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}.card h2{margin:0 0 10px;font-size:15px;color:var(--pri)}
+  .kpis{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}.kpi b{display:block;font-size:30px;color:var(--pri)}.kpi span{color:var(--mut);font-size:13px}
+  .c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}.c12{grid-column:1/-1}
+  @media(max-width:1000px){.c4,.c5,.c6,.c7,.c8{grid-column:1/-1}}
+  .it{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}.it small{display:block;color:var(--mut)}
+  .tag{display:inline-block;padding:1px 8px;border-radius:12px;font-size:11px;border:1px solid var(--line);margin-right:4px}
+  .Crítica{color:var(--bad);border-color:var(--bad)}.Alta,.Media{color:var(--warn);border-color:var(--warn)}.Baja{color:var(--ok);border-color:var(--ok)}
+  .live{animation:pulso 1.2s ease-in-out infinite;color:var(--ok)}@keyframes pulso{50%{opacity:.35}}
+  svg text{fill:var(--txt);font-size:11px;pointer-events:none}.zona{stroke:var(--line);stroke-width:2;rx:10}
+  #msg{color:var(--mut);font-size:12px;margin-top:6px;min-height:16px}
+  body.kiosko header .no-k,body.kiosko .no-k{display:none}body.kiosko main{max-width:none}body.kiosko .kpi b{font-size:44px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛡️ Centro de mando <span id="tagFeria" class="live" style="font-size:12px"></span></h1>
+  <div class="row">
+    <label class="no-k" style="font-size:12px;color:var(--mut)"><input type="checkbox" id="chkDemo"> Ver datos demo</label>
+    <button id="btnKiosko" class="pri">🖥 Pantalla de feria</button>
+    <button id="btnTema" class="no-k">🌓</button>
+    <a class="no-k" href="dashboard.html">← Volver</a>
+  </div>
+</header>
+<main>
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card c7"><h2>Mapa de calor de incidentes (plano de la privada)</h2>
+    <div class="row" style="margin-bottom:6px;font-size:12px">Hora <input type="range" id="hIni" min="0" max="23" value="0" style="width:110px"> <span id="hIniV">0</span>h a
+      <input type="range" id="hFin" min="0" max="23" value="23" style="width:110px"> <span id="hFinV">23</span>h</div>
+    <svg id="plano" viewBox="0 0 600 330" style="width:100%"></svg></section>
+  <section class="card c5"><h2>Automático vs. revisión humana</h2><canvas id="chDona" height="170"></canvas>
+    <h2 style="margin-top:14px">Incidentes por hora del día</h2><canvas id="chHora" height="150"></canvas></section>
+
+  <section class="card c6"><h2>🟡 Pendientes del administrador (solo lo dudoso)</h2><div id="pend"></div></section>
+  <section class="card c6"><h2>🚨 Alertas de anomalías</h2><div id="alertas"></div></section>
+
+  <section class="card c6"><h2>🚪 Accesos del Portón (en vivo)</h2><div id="accesos"></div></section>
+  <section class="card c6"><h2>🤖 Resuelto por Centinela</h2><div id="acciones"></div></section>
+
+  <section class="card c12"><h2>📰 Resumen del día</h2><div id="resumen" style="font-size:14px;line-height:1.5">—</div>
+    <div class="row no-k" style="margin-top:8px"><button class="pri" id="btnResumen">Generar ahora</button><button id="btnLeer">🔊 Leer en voz alta</button></div></section>
+
+  <section class="card c7 no-k"><h2>⚙️ Reglas «si… entonces…»</h2><div id="reglas"></div>
+    <div class="row" style="margin-top:10px">
+      <input id="rNom" placeholder="Nombre" style="width:140px">
+      <select id="rEvento"><option value="incidente_nuevo">Incidente nuevo</option><option value="acceso_denegado">Acceso denegado</option></select>
+      <input id="rCampo" placeholder="campo (tipo, zona…)" style="width:130px">
+      <select id="rOp"><option value="igual">es igual a</option><option value="contiene">contiene</option></select>
+      <input id="rValor" placeholder="valor" style="width:110px">
+      <select id="rAccion"><option value="asignar">asignar a…</option><option value="prioridad">poner prioridad…</option><option value="revision_admin">pedir revisión</option><option value="notificar">notificar a…</option></select>
+      <input id="rParam" placeholder="parámetro" style="width:110px"><button class="pri" id="btnRegla">Añadir</button></div>
+    <div style="font-size:11px;color:var(--mut);margin-top:6px">Por seguridad las reglas NO pueden abrir el portón, borrar datos ni activar el SOS.</div></section>
+  <section class="card c5 no-k"><h2>🔐 Integridad y demo</h2>
+    <div class="row"><button class="pri" id="btnInt">Verificar integridad</button><button id="btnSembrar">Cargar datos demo</button><button class="pel" id="btnBorrar">Borrar datos demo</button></div>
+    <div id="integ" style="margin-top:10px;font-size:13px"></div><div id="msg"></div></section>
+</main>
+<script src="vendor/libs/chart.umd.js"></script>
+<script>
+(function () {
+  const HOST = location.hostname || 'localhost', API = `http://${HOST}:9000/api/auto`;
+  const $ = (i) => document.getElementById(i), tok = () => localStorage.getItem('token') || '';
+  const H = () => ({ 'Content-Type': 'application/json', ...(tok() ? { Authorization: `Token ${tok()}` } : {}) });
+  const get = (r) => fetch(API + r, { headers: H() }).then(x => x.json());
+  const post = (r, b) => fetch(API + r, { method: 'POST', headers: H(), body: JSON.stringify(b || {}) }).then(x => x.json());
+  const msg = (t) => { $('msg').textContent = t; };
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let datos = null, charts = {}, timer = null;
+
+  const ZONAS = { 'Calle norte': [20, 20, 360, 70], 'Parque': [20, 100, 200, 120], 'Alberca': [230, 100, 150, 120], 'Caseta': [400, 20, 180, 70],
+                  'Calle sur': [20, 230, 360, 70], 'Estacionamiento': [400, 100, 180, 120], 'Área común': [400, 230, 180, 70] };
+  const color = (v, max) => { const t = max ? Math.min(1, v / max) : 0; return `color-mix(in srgb, var(--h1) ${Math.round(t * 100)}%, var(--h0))`; };
+
+  function plano() {
+    if (!datos) return;
+    const a = +$('hIni').value, b = +$('hFin').value; $('hIniV').textContent = a; $('hFinV').textContent = b;
+    const tot = {}; let max = 0;
+    for (const z of Object.keys(ZONAS)) { const arr = datos.mapa[z] || []; tot[z] = arr.slice(a, b + 1).reduce((s, x) => s + x, 0); max = Math.max(max, tot[z]); }
+    $('plano').innerHTML = Object.entries(ZONAS).map(([z, [x, y, w, h]]) =>
+      `<rect class="zona" x="${x}" y="${y}" width="${w}" height="${h}" fill="${color(tot[z], max)}"/>
+       <text x="${x + 10}" y="${y + 22}" style="font-weight:700">${z}</text><text x="${x + 10}" y="${y + 40}">${tot[z]} incidente(s)</text>`).join('');
+  }
+
+  function graficas() {
+    if (!window.Chart) return;
+    const k = datos.kpis;
+    const pie = [k.pct_auto, k.pct_humano];
+    charts.d ? (charts.d.data.datasets[0].data = pie, charts.d.update()) :
+      charts.d = new Chart($('chDona'), { type: 'doughnut', data: { labels: ['Resuelto por Centinela', 'Revisión humana'], datasets: [{ data: pie, backgroundColor: ['#0DF2CC', '#FFD84D'], borderWidth: 0 }] },
+        options: { plugins: { legend: { labels: { color: getComputedStyle(document.body).color } } }, animation: false } });
+    const horas = Array(24).fill(0); Object.values(datos.mapa).forEach(arr => arr.forEach((v, i) => horas[i] += v));
+    charts.h ? (charts.h.data.datasets[0].data = horas, charts.h.update()) :
+      charts.h = new Chart($('chHora'), { type: 'bar', data: { labels: horas.map((_, i) => i), datasets: [{ data: horas, backgroundColor: '#0DF2CC' }] },
+        options: { plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#6B9E96' } }, y: { ticks: { color: '#6B9E96' } } }, animation: false } });
+  }
+
+  function pintar() {
+    const k = datos.kpis;
+    $('kpis').innerHTML = [
+      [k.horas_ahorradas_semana + ' h', 'Horas ahorradas esta semana'], [k.pct_auto + ' %', 'Resuelto automático (vs ' + k.pct_humano + ' % humano)'],
+      [k.incidentes_abiertos, 'Incidentes abiertos'], [k.tiempo_respuesta_min + ' min', 'Tiempo promedio de respuesta'],
+      [k.accesos_hoy, 'Accesos de hoy'], [k.no_registrados_hoy, 'Visitantes no registrados hoy']].map(([v, t]) => `<div class="kpi"><b>${v}</b><span>${t}</span></div>`).join('');
+    $('pend').innerHTML = datos.pendientes.length ? datos.pendientes.map(i => `<div class="it"><span class="tag ${i.prioridad}">${i.prioridad}</span><b>${esc(i.tipo)}</b> · ${esc(i.zona)} · ${i.fecha}
+      <small>${esc(i.descripcion)}</small><small>🤖 ${esc(i.motivo)}</small><button data-r="${i.id}" class="no-k" style="margin-top:4px">Marcar resuelto</button></div>`).join('') : '<div class="it">Nada pendiente 🎉 Centinela resolvió todo lo claro.</div>';
+    $('alertas').innerHTML = datos.alertas.length ? datos.alertas.map(a => `<div class="it">⚠️ ${esc(a.motivo)}<small>${a.fecha} · ${a.tipo}</small><button data-a="${a.id}" class="no-k">Atendida</button></div>`).join('') : '<div class="it">Sin alertas</div>';
+    $('accesos').innerHTML = datos.accesos.length ? datos.accesos.map(a => `<div class="it">${a.resultado === 'ok' ? '✅' : '⛔'} <b>${esc(a.nombre)}</b> ${esc(a.casa)}<small>${a.fecha} · ${a.origen}</small></div>`).join('') : '<div class="it">Sin accesos</div>';
+    $('acciones').innerHTML = datos.acciones.map(a => `<div class="it">🤖 ${esc(a.detalle)}<small>${a.fecha} · ${a.tipo} · ahorra ${a.minutos} min</small></div>`).join('') || '<div class="it">Sin acciones todavía</div>';
+    $('resumen').textContent = datos.resumen ? `${datos.resumen.texto}  (${datos.resumen.fecha}, ${datos.resumen.por})` : 'Aún no hay resumen: pulsa «Generar ahora».';
+    plano(); graficas();
+  }
+
+  async function refrescar() {
+    try { datos = await get('/centro/' + ($('chkDemo').checked ? '?demo=1' : '')); if (datos.estado === 'ERROR') { $('kpis').innerHTML = `<div class="kpi"><b>🔒</b><span>${datos.mensaje}. Inicia sesión como administrador.</span></div>`; return; } pintar(); }
+    catch (e) { $('kpis').innerHTML = '<div class="kpi"><b>⚠️</b><span>Sin conexión con Django (:9000)</span></div>'; }
+  }
+  async function reglas() {
+    const r = await get('/reglas/'); if (!r.items) return;
+    $('reglas').innerHTML = r.items.map(x => `<div class="it"><label><input type="checkbox" data-g="${x.id}" ${x.activa ? 'checked' : ''}> <b>${esc(x.nombre)}</b></label>
+      <small>SI ${esc(x.campo)} ${esc(x.operador)} «${esc(x.valor)}» ENTONCES ${esc(x.accion)} ${esc(x.parametro)} · aplicada ${x.veces} veces</small></div>`).join('');
+  }
+
+  document.addEventListener('click', async (e) => {
+    const t = e.target;
+    if (t.dataset.r) { await post(`/incidentes/${t.dataset.r}/resolver/`); refrescar(); }
+    if (t.dataset.a) { await post(`/alertas/${t.dataset.a}/atender/`); refrescar(); }
+  });
+  document.addEventListener('change', async (e) => { if (e.target.dataset.g) { await post('/reglas/', { id: +e.target.dataset.g, activa: e.target.checked }); } });
+  $('hIni').oninput = $('hFin').oninput = plano;
+  $('chkDemo').onchange = refrescar;
+  $('btnResumen').onclick = async () => { msg('Generando resumen…'); await post('/resumen/generar/', { demo: $('chkDemo').checked }); msg(''); refrescar(); };
+  $('btnLeer').onclick = () => { if (datos && datos.resumen) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(datos.resumen.texto); u.lang = 'es-MX'; speechSynthesis.speak(u); } };
+  $('btnInt').onclick = async () => {
+    const r = await get('/integridad/'); if (r.estado === 'ERROR') return ($('integ').textContent = r.mensaje);
+    const l = []; for (const g of ['real', 'demo']) for (const [n, v] of Object.entries(r[g])) l.push(`${v.ok ? '✅' : '❌'} ${g}/${n}: ${v.ok ? v.total + ' eventos íntegros' : v.motivo}`);
+    $('integ').innerHTML = l.map(esc).join('<br>');
+  };
+  $('btnSembrar').onclick = async () => { msg('Cargando datos de demo…'); const r = await post('/demo/sembrar/'); msg('Demo cargada: ' + JSON.stringify(r.creado)); $('chkDemo').checked = true; refrescar(); };
+  $('btnBorrar').onclick = async () => { if (!confirm('¿Borrar TODOS los datos de demo?')) return; const r = await post('/demo/borrar/'); await fetch(`http://${HOST}:9000/api/biometria/feria/borrar-demo/`, { method: 'POST', headers: H(), body: '{}' }).catch(() => {}); msg('Borrado: ' + JSON.stringify(r.borrado)); refrescar(); };
+  $('btnRegla').onclick = async () => {
+    const r = await post('/reglas/', { nombre: $('rNom').value, evento: $('rEvento').value, campo: $('rCampo').value, operador: $('rOp').value, valor: $('rValor').value, accion: $('rAccion').value, parametro: $('rParam').value });
+    msg(r.estado === 'ERROR' ? r.mensaje : 'Regla añadida'); reglas();
+  };
+  $('btnTema').onclick = () => { const r = document.documentElement; r.dataset.theme = r.dataset.theme === 'light' ? 'dark' : 'light'; };
+  $('btnKiosko').onclick = async () => {
+    document.body.classList.toggle('kiosko');
+    if (document.body.classList.contains('kiosko')) { try { await document.documentElement.requestFullscreen(); } catch (_) {} } else if (document.fullscreenElement) document.exitFullscreen();
+  };
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) document.body.classList.remove('kiosko'); });
+  fetch(`http://${HOST}:9000/api/biometria/config/`).then(r => r.json()).then(c => { if (c.modo_feria) $('tagFeria').textContent = '● MODO FERIA · en vivo'; }).catch(() => {});
+  refrescar(); reglas(); timer = setInterval(refrescar, 2000);
+})();
+</script>
+</body>
+</html>
