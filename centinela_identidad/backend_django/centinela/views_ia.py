@@ -68,13 +68,14 @@ def chat_ia(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def extraer_reporte_ia(request):
-    api_key = os.getenv("ANTHROPIC_API_KEY", "")
-
-    if not api_key or api_key in ("", "tu_api_key_aqui", "your_api_key_here"):
+    # Ahora pasa por la cadena Groq -> Gemini -> Claude (solo texto, sin visión).
+    # Si no hay NINGUNA key configurada se mantiene el 503 original.
+    from centinela.asistente import config as _cfg
+    if not any(_cfg.key(n) for n in ("GROQ_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY")):
         return JsonResponse(
             {
-                "error": "API key de Anthropic no configurada",
-                "instrucciones": "Copia .env.example a .env y agrega tu ANTHROPIC_API_KEY",
+                "error": "No hay ninguna API key de IA configurada",
+                "instrucciones": "Copia .env.example a .env y agrega GROQ_API_KEY, GEMINI_API_KEY o ANTHROPIC_API_KEY",
             },
             status=503,
         )
@@ -85,8 +86,6 @@ def extraer_reporte_ia(request):
 
         if not transcripcion:
             return JsonResponse({"error": "El campo 'transcripcion' es requerido"}, status=400)
-
-        client = anthropic.Anthropic(api_key=api_key)
 
         system_prompt = (
             "Eres un extractor de reportes para Centinela, sistema vecinal de Privada La Condesa. "
@@ -112,14 +111,15 @@ def extraer_reporte_ia(request):
             "Si la transcripción es incomprensible o vacía, devuelve campos vacíos y confianza=0."
         )
 
-        response = client.messages.create(
-            model="claude-sonnet-4-5",
+        from centinela.asistente.proveedores import Cadena
+        texto, _prov = Cadena(orden=[p for p in _cfg.cadena() if p != "local"]).completar(
+            system_prompt,
+            [{"role": "user", "content": f"Transcripción del reporte:\n{transcripcion}"}],
             max_tokens=512,
-            system=system_prompt,
-            messages=[{"role": "user", "content": f"Transcripción del reporte:\n{transcripcion}"}],
         )
-
-        texto = response.content[0].text.strip()
+        texto = texto.strip()
+        if not texto:
+            return JsonResponse({"error": "Ningún proveedor de IA respondió"}, status=503)
 
         if texto.startswith("```"):
             lineas = [l for l in texto.split("\n") if not l.strip().startswith("```")]

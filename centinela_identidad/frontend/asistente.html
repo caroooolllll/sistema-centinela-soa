@@ -192,6 +192,21 @@
 #ca-send { background: #0DF2CC; color: #0D1C19; }
 #ca-mic-btn { background: #1E3330; color: #0DF2CC; }
 #ca-mic-btn.ca-recording { background: #3a1010; color: #ff6b6b; animation: ca-pulse-mic 1s infinite; }
+
+/* ── ESTADO + PROVEEDOR (pipeline rápido) ── */
+#ca-status {
+  display: none; align-items: center; gap: 8px; padding: 5px 12px; flex-shrink: 0;
+  background: rgba(13,242,204,0.04); border-bottom: 1px solid rgba(13,242,204,0.1);
+}
+#ca-status.ca-on { display: flex; }
+.ca-state-chip {
+  font-size: 11.5px; color: #0DF2CC; background: rgba(13,242,204,0.1);
+  border: 1px solid rgba(13,242,204,0.3); border-radius: 20px; padding: 2px 10px;
+  animation: ca-dot 1.4s ease-in-out infinite;
+}
+#ca-prov { margin-left: auto; font-size: 10px; color: #6B9E96; opacity: 0.85; white-space: nowrap; }
+#ca-ptt { background: #1E3330; color: #0DF2CC; touch-action: none; user-select: none; }
+#ca-ptt.ca-recording { background: #3a1010; color: #ff6b6b; animation: ca-pulse-mic 1s infinite; }
 </style>
 
 <div id="ca-wrap">
@@ -235,6 +250,9 @@
       <span id="ca-tbar-text">Esperando "Centinela..."</span>
     </div>
 
+    <!-- Estado del asistente + proveedor que respondió -->
+    <div id="ca-status"><span class="ca-state-chip" id="ca-state-chip"></span><span id="ca-prov"></span></div>
+
     <!-- Messages -->
     <div id="ca-msgs"></div>
 
@@ -245,6 +263,7 @@
     <div id="ca-footer">
       <input id="ca-input" type="text" placeholder="Escribe o di 'Centinela, ...'..." maxlength="500" />
       <button class="ca-icon-btn" id="ca-mic-btn" title="Grabar mensaje">🎙️</button>
+      <button class="ca-icon-btn" id="ca-ptt" title="Mantén presionado para hablar">🗣️</button>
       <button class="ca-icon-btn" id="ca-send" title="Enviar">➤</button>
     </div>
   </div>

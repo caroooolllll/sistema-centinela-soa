@@ -1,0 +1,18 @@
+{
+  "sos": ["auxilio", "Centinela, emergencia", "me están robando", "ayuda", "necesito ayuda", "Centinela, socorro",
+          "hay un incendio en la casa 12", "activa el SOS", "llama a la policía", "es una emergencia",
+          "me quieren asaltar", "SOS", "Centinela, ¡auxilio! me están robando"],
+  "no_sos": ["ayúdame a crear un reporte", "abre contactos de emergencia", "cómo activo el SOS",
+             "dime los eventos de hoy", "abre reportes", "qué es una emergencia vecinal"],
+  "nav": {
+    "abre reportes": "avisos.html", "ve a eventos": "eventos.html", "llévame al dashboard": "dashboard.html",
+    "Centinela, abre el chat": "chat.html", "ir al inicio": "dashboard.html", "abre mi perfil": "perfil.html",
+    "muéstrame las encuestas": "encuestas.html", "abre el historial": "historial.html",
+    "llévame a la configuración por favor": "configuracion.html",
+    "abre contactos de emergencia": "emergencia-contactos.html", "abre notificaciones": "notificaciones.html",
+    "enséñame las noticias": "noticias.html"
+  },
+  "no_nav": ["crea un evento de reunión el viernes", "abre un reporte de que hay un árbol caído",
+             "qué pasó hoy en la privada", "mándale un mensaje a Sofia", "haz una encuesta sobre el portón",
+             "dame un resumen de los avisos de hoy"]
+}
