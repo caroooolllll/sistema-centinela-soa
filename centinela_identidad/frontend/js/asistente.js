@@ -23,6 +23,7 @@
   const API_STT    = `${DJANGO}/api/ia/stt/`;
   const API_TTS    = `${DJANGO}/api/ia/tts/`;
   const API_SOS    = `${DJANGO}/api/ia/sos-aviso/`;
+  const API_ESTADO = `${DJANGO}/api/ia/estado/`;
 
   // Atajos locales (SOS / navegación) — se cargan junto al asistente, sin tocar las páginas
   (function () {
@@ -109,7 +110,11 @@
   let vozReproduciendo = false;
   let vozAudio = null;
   let vozEpoca = 0;              // sube con cada interrupción: invalida lo pendiente
-  let vozServidorCaido = 0;      // timestamp hasta el que se evita el servidor de voz
+  // Blindaje: si edge-tts no entrega el PRIMER audio en 1.2 s (o falla), esa respuesta completa se dice
+  // con la voz del navegador. La siguiente respuesta vuelve a intentar edge-tts automáticamente.
+  const VOZ_PRIMER_AUDIO_MS = 1200;
+  let vozRespNavegador = false;  // true = lo que queda de esta respuesta usa la voz del navegador
+  let vozPrimeraFrase = true;    // la próxima oración es la primera de una respuesta
   let ultimoHablado = '';
   const vozWaiters = [];
 
@@ -117,19 +122,23 @@
     return String(t).replace(/[\u{1F000}-\u{1FAFF}☀-➿•*_#`\n]/gu, ' ').replace(/\s+/g, ' ').trim();
   }
 
-  function pedirAudio(texto) {
-    if (Date.now() < vozServidorCaido) return Promise.resolve(null);
+  function pedirAudio(texto, primero) {
+    if (vozRespNavegador || navigator.onLine === false) return Promise.resolve(null);
     const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 6000);
+    const to = setTimeout(() => ctl.abort(), primero ? VOZ_PRIMER_AUDIO_MS : 4000);
     return fetch(API_TTS, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ texto }), signal: ctl.signal,
     }).then(r => {
       if (!r.ok) throw new Error('tts ' + r.status);
       return r.blob();
-    }).then(b => (b.size > 200 ? URL.createObjectURL(b) : null))
-      .catch(() => { vozServidorCaido = Date.now() + 60000; return null; })
-      .finally(() => clearTimeout(to));
+    }).then(b => {
+      if (b.size <= 200) throw new Error('tts vacío');
+      return URL.createObjectURL(b);
+    }).catch(() => {
+      vozRespNavegador = true;      // esta respuesta sigue con la voz del navegador, sin esperar más
+      return null;
+    }).finally(() => clearTimeout(to));
   }
 
   function hablarNavegador(texto) {
@@ -153,6 +162,8 @@
 
   function vozOciosa() {
     if (vozReproduciendo || vozCola.length) return;
+    vozRespNavegador = false;   // reintento automático de edge-tts en la siguiente respuesta
+    vozPrimeraFrase = true;
     setEstado(null);
     while (vozWaiters.length) vozWaiters.shift()();
   }
@@ -166,7 +177,8 @@
       const url = await item.promesaAudio;
       if (epoca !== vozEpoca) break;
       setEstado('hablando');
-      if (url) await tocarUrl(url); else await hablarNavegador(item.texto);
+      if (url && !vozRespNavegador) await tocarUrl(url);
+      else { if (url) URL.revokeObjectURL(url); await hablarNavegador(item.texto); }
     }
     if (epoca === vozEpoca) vozReproduciendo = false;
     vozOciosa();
@@ -177,7 +189,9 @@
     const t = limpiarParaVoz(texto);
     if (!t) return;
     ultimoHablado = (ultimoHablado + ' ' + t).slice(-600);
-    vozCola.push({ texto: t, promesaAudio: pedirAudio(t) });
+    const primero = vozPrimeraFrase;
+    vozPrimeraFrase = false;
+    vozCola.push({ texto: t, promesaAudio: pedirAudio(t, primero) });
     bombaVoz();
   }
 
@@ -186,6 +200,8 @@
     vozEpoca++;
     vozCola.length = 0;
     vozReproduciendo = false;
+    vozRespNavegador = false;
+    vozPrimeraFrase = true;
     ultimoHablado = '';
     try { if (vozAudio) { vozAudio.pause(); vozAudio.src = ''; } } catch (_) {}
     vozAudio = null;
@@ -222,6 +238,24 @@
     provEl.textContent = `⚡ ${PROV_NOMBRE[nombre] || nombre}${ms != null ? ' · ' + ms + ' ms' : ''}`;
     statusBar.classList.add('ca-on');
   }
+
+  // ── Modo feria: avisa por voz del navegador si se cae el internet (atajos y respuestas locales siguen) ──
+  let modoFeria = false;
+  function avisoSinInternet() {
+    const m = 'Sin internet. Puedo abrir secciones y activar emergencia.';
+    agregarMsg('bot', '📴 ' + m);
+    if (ttsActivo) hablarNavegador(m);
+  }
+  fetch(API_ESTADO).then(r => r.json()).then(j => {
+    modoFeria = !!j.modo_feria;
+    if (modoFeria && j.internet === false) avisoSinInternet();
+  }).catch(() => {});
+  window.addEventListener('offline', () => { if (modoFeria) avisoSinInternet(); });
+  window.addEventListener('online', () => {
+    if (!modoFeria) return;
+    agregarMsg('bot', '📶 Conexión recuperada.');
+    if (ttsActivo) hablarNavegador('Conexión recuperada.');
+  });
 
   ttsBtn.addEventListener('click', () => {
     ttsActivo = !ttsActivo;

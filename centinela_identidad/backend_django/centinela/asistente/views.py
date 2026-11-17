@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from . import config, contexto, voz
+from . import config, contexto, feria, red, voz
 from .atajos import resolver_atajo
 from .parser import ParserStream, MARCA
 from .proveedores import Cadena, ProveedorError
@@ -85,7 +85,7 @@ def _mensajes(body, mensaje, extra=""):
 def asistente_stream(request):
     try:
         body = json.loads(request.body or b"{}")
-    except json.JSONDecodeError:
+    except ValueError:
         return JsonResponse({"error": "JSON inválido"}, status=400)
     mensaje = str(body.get("mensaje", "")).strip()[:500]
     if not mensaje:
@@ -136,7 +136,8 @@ def asistente_stream(request):
             accion["activar_sos"] = True
         yield _sse("accion", _accion_completa(accion, parser.frases))
         yield _sse("fin", {"proveedor": cadena.proveedor or "ninguno", "intentos": cadena.intentos,
-                           "ms_primer_texto": primer or ms(), "ms_total": ms()})
+                           "ms_primer_texto": primer or ms(), "ms_total": ms(),
+                           "sin_internet": cadena.sin_internet})
 
     resp = StreamingHttpResponse(generar(), content_type="text/event-stream; charset=utf-8")
     resp["Cache-Control"] = "no-cache"
@@ -166,10 +167,12 @@ def stt(request):
 def tts(request):
     try:
         texto = str(json.loads(request.body or b"{}").get("texto", "")).strip()
-    except json.JSONDecodeError:
+    except ValueError:
         return JsonResponse({"error": "JSON inválido"}, status=400)
     if not texto:
         return JsonResponse({"error": "Campo 'texto' requerido"}, status=400)
+    if not red.hay_internet():   # sin red: el navegador usa su propia voz de inmediato
+        return JsonResponse({"error": "sin_internet"}, status=502)
     try:
         mp3 = voz.sintetizar(texto)
     except Exception as e:
@@ -184,7 +187,7 @@ def sos_aviso(request):
     """El frontend ya activó el SOS por su cuenta; aquí solo se deja registro (no bloquea nada)."""
     try:
         texto = str(json.loads(request.body or b"{}").get("mensaje", ""))[:200]
-    except json.JSONDecodeError:
+    except ValueError:
         texto = ""
     log.warning("[SOS] activado por voz/texto en el cliente: %r", texto)
     return JsonResponse({"ok": True})
@@ -195,6 +198,8 @@ def estado(request):
     """Qué proveedores están configurados (sin exponer valores de keys)."""
     return JsonResponse({
         "cadena": config.cadena(),
+        "modo_feria": feria.activo(),
+        "internet": red.hay_internet(),
         "keys": {n: bool(config.key(n)) for n in ("GROQ_API_KEY", "GEMINI_API_KEY", "ANTHROPIC_API_KEY")},
         "modelos": {"groq": config.groq_modelo(), "gemini": config.gemini_modelo(),
                     "claude": config.claude_modelo(), "stt": config.groq_stt_modelo(), "voz": config.tts_voz()},

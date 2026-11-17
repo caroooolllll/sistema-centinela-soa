@@ -10,9 +10,12 @@ from .proveedores import ProveedorError, _error_http
 
 def transcribir(audio_bytes, nombre="voz.webm", mime="audio/webm"):
     """Groq Whisper. Lanza ProveedorError si falla (el frontend cae al reconocimiento del navegador)."""
+    from . import red
     k = config.key("GROQ_API_KEY")
     if not k:
         raise ProveedorError("auth", "GROQ_API_KEY no configurada")
+    if not red.hay_internet():
+        raise ProveedorError("otro", "sin internet")
     try:
         r = httpx.post(
             "https://api.groq.com/openai/v1/audio/transcriptions",

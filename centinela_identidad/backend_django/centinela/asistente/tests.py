@@ -8,6 +8,19 @@ from . import atajos, config, proveedores
 from .parser import ParserStream, MARCA
 from .proveedores import Cadena, ProveedorError, clasificar_429
 
+_red = None
+
+
+def setUpModule():
+    """Las pruebas no dependen de que la máquina tenga internet."""
+    global _red
+    _red = mock.patch("centinela.asistente.red.hay_internet", return_value=True)
+    _red.start()
+
+
+def tearDownModule():
+    _red.stop()
+
 
 class AtajoSOS(SimpleTestCase):
     FRASES = ["auxilio", "Centinela, emergencia", "me están robando", "ayuda", "necesito ayuda",
@@ -241,3 +254,41 @@ class ContratoFrontend(SimpleTestCase):
     def test_tipo_invalido_cae_a_respuesta(self):
         ev = self._stream("Hola.\n" + MARCA + '\n{"tipo":"inventado"}', "cuéntame un chiste")
         self.assertEqual(ev["accion"][0]["tipo"], "respuesta")
+
+
+class SinInternet(SimpleTestCase):
+    """Modo feria / red caída: atajos y respuestas locales siguen funcionando, sin esperar timeouts."""
+
+    def setUp(self):
+        self.p = mock.patch("centinela.asistente.red.hay_internet", return_value=False)
+        self.p.start()
+        self.addCleanup(self.p.stop)
+
+    def _post(self, mensaje):
+        r = Client().post("/api/ia/asistente/stream/", json.dumps({"mensaje": mensaje}),
+                          content_type="application/json")
+        return b"".join(r.streaming_content).decode()
+
+    def test_sos_y_navegacion_sin_internet(self):
+        with mock.patch("httpx.stream", side_effect=AssertionError("red")),              mock.patch("httpx.post", side_effect=AssertionError("red")):
+            self.assertIn('"activar_sos": true', self._post("auxilio"))
+            self.assertIn('"destino": "eventos.html"', self._post("abre eventos"))
+
+    def test_pregunta_libre_cae_a_respuesta_local_sin_llamar_proveedores(self):
+        boom = mock.Mock(side_effect=AssertionError("no debe llamar proveedores remotos"))
+        with mock.patch.dict(proveedores.PROVEEDORES, {"groq": boom, "gemini": boom, "claude": boom}):
+            cuerpo = self._post("cuéntame un chiste")
+        self.assertIn('"proveedor": "local"', cuerpo)
+        self.assertIn('"sin_internet": true', cuerpo)
+        self.assertIn("event: frase", cuerpo)
+
+    def test_voz_y_whisper_avisan_sin_internet(self):
+        from django.test import RequestFactory
+        from . import views
+        r = views.tts(RequestFactory().post("/api/ia/tts/", json.dumps({"texto": "hola"}),
+                                            content_type="application/json"))
+        self.assertEqual(r.status_code, 502)   # el navegador usa su propia voz al instante
+        from . import voz
+        with mock.patch.object(config, "key", return_value="x"):
+            with self.assertRaises(ProveedorError):
+                voz.transcribir(b"0" * 3000)   # el endpoint lo traduce a 502 -> el navegador usa su reconocimiento

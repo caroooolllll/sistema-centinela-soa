@@ -162,8 +162,17 @@ PROVEEDORES = {"groq": stream_groq, "gemini": stream_gemini, "claude": stream_cl
 class Cadena:
     """Ejecuta la cadena de respaldo. Uso: for chunk in Cadena().stream(system, mensajes)."""
 
-    def __init__(self, orden=None, sleep=time.sleep):
-        self.orden = orden or config.cadena()
+    REMOTOS = ("groq", "gemini", "claude")
+
+    def __init__(self, orden=None, sleep=time.sleep, red_fn=None):
+        orden = orden or config.cadena()
+        # Sin internet no se pierde tiempo en timeouts: se pasa directo a las respuestas locales
+        from . import red
+        hay = (red_fn or red.hay_internet)()
+        self.sin_internet = not hay
+        if not hay:
+            orden = [p for p in orden if p not in self.REMOTOS] or ["local"]
+        self.orden = orden
         self.sleep = sleep
         self.proveedor = None      # quién respondió
         self.intentos = []         # [(nombre, resultado)] para el log / UI de demo
