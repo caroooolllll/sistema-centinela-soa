@@ -403,6 +403,10 @@
 
     window.eliminarEvento = async function eliminarEvento(eventId) {
         if (!confirm('Eliminar este evento?')) return;
+        try {
+            if (!window.CentinelaBio) await new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = 'js/biometria-core.js'; sc.onload = ok; sc.onerror = mal; document.head.appendChild(sc); });
+            if (!(await window.CentinelaBio.confirmarAccion('Eliminar un evento'))) return;
+        } catch (_) { /* sin cámara: no se bloquea una acción que ya existía */ }
         const response = await fetch(`${EVENTS_API}/${eventId}`, {
             method: 'DELETE',
             headers: { Authorization: `Token ${token}` },

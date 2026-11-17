@@ -72,6 +72,8 @@ class Sesion(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_expiracion = models.DateTimeField()
     activa = models.BooleanField(default=True)
+    # Segundo factor facial: mientras sea True la sesión NO sirve para nada (ni en los otros servicios)
+    biometria_pendiente = models.BooleanField(default=False)
 
     # Última ubicación conocida de esta sesión
     ultima_latitud = models.FloatField(null=True, blank=True)

@@ -37,7 +37,7 @@ PROMPT = (
     "Páginas: dashboard.html (inicio), chat.html (chat/mensajes), eventos.html, noticias.html, "
     "avisos.html (avisos, reportes, incidencias), encuestas.html, historial.html (reportes anteriores), "
     "panico.html (SOS), accesibilidad-modo.html, perfil.html, configuracion.html, notificaciones.html, "
-    "publicaciones.html, emergencia-contactos.html.\n\n"
+    "publicaciones.html, emergencia-contactos.html, porton.html (portón inteligente con reconocimiento facial).\n\n"
     "REGLAS (en orden): 1 emergencia = peligro inmediato real (tipo=emergencia, destino=panico.html). "
     "2 mensaje_vecino: 'mándale un mensaje a X'. Sin destinatario o sin contenido: tipo=incompleto con un ejemplo. "
     "3 nuevo_evento. 4 nueva_encuesta (opciones por defecto Sí, No, Me abstengo). 5 nuevo_aviso. "
@@ -101,6 +101,21 @@ def asistente_stream(request):
             yield _sse("frase", {"texto": atajo["respuesta"], "idx": 0})
             yield _sse("accion", _accion_completa(atajo, [atajo["respuesta"]]))
             yield _sse("fin", {"proveedor": "atajo", "ms_primer_texto": ms(), "ms_total": ms()})
+            return
+
+        # 1b) "¿quién entró hoy?" / "¿hubo visitantes no registrados?": se lee la bitácora de accesos
+        #     (solo lectura, según el rol del usuario). No necesita LLM ni internet.
+        try:
+            from biometria import consultas
+            from biometria.views import _sesion
+            s = _sesion(request)
+            respuesta = consultas.responder_bitacora(mensaje, s.usuario if s else None)
+        except Exception:
+            respuesta = None
+        if respuesta:
+            yield _sse("frase", {"texto": respuesta, "idx": 0})
+            yield _sse("accion", _accion_completa({"tipo": "respuesta"}, [respuesta]))
+            yield _sse("fin", {"proveedor": "bitacora", "ms_primer_texto": ms(), "ms_total": ms()})
             return
 
         # 2) contexto de avisos si la pregunta lo pide

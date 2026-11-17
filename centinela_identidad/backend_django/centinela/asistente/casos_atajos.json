@@ -10,9 +10,10 @@
     "muéstrame las encuestas": "encuestas.html", "abre el historial": "historial.html",
     "llévame a la configuración por favor": "configuracion.html",
     "abre contactos de emergencia": "emergencia-contactos.html", "abre notificaciones": "notificaciones.html",
-    "enséñame las noticias": "noticias.html"
+    "enséñame las noticias": "noticias.html",
+    "abre el portón inteligente": "porton.html", "llévame al portón": "porton.html"
   },
   "no_nav": ["crea un evento de reunión el viernes", "abre un reporte de que hay un árbol caído",
              "qué pasó hoy en la privada", "mándale un mensaje a Sofia", "haz una encuesta sobre el portón",
-             "dame un resumen de los avisos de hoy"]
+             "dame un resumen de los avisos de hoy", "quién entró hoy", "hubo visitantes no registrados"]
 }

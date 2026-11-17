@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portón inteligente — Centinela</title>
+<style>
+  :root{--bg:#0A1513;--card:#0D1C19;--line:#1E3330;--pri:#0DF2CC;--txt:#d0ece8;--mut:#6B9E96}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:'Outfit','Segoe UI',sans-serif}
+  header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--line)}
+  header a{color:var(--pri);text-decoration:none;font-size:14px}h1{margin:0;font-size:20px;color:var(--pri)}
+  .tag{background:#3a2a00;color:#FFD84D;border-radius:20px;padding:2px 10px;font-size:12px;margin-left:8px}
+  main{display:grid;grid-template-columns:1fr 340px;gap:16px;padding:16px;max-width:1200px;margin:auto}
+  @media(max-width:900px){main{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  #cam{width:100%;aspect-ratio:4/3;display:block;background:#000}
+  #estado{padding:14px 18px;font-size:22px;font-weight:700;min-height:62px}
+  #sub{padding:0 18px 14px;color:var(--mut);font-size:14px;min-height:20px}
+  .ok{color:#7CFFB2}.no{color:#ff6b6b}.av{color:#FFD84D}
+  #gate{height:120px;position:relative;background:#07100e;border-top:1px solid var(--line);overflow:hidden}
+  .hoja{position:absolute;top:18px;bottom:0;width:50%;background:repeating-linear-gradient(90deg,#27413c 0 10px,#1b2f2b 10px 20px);transition:transform 1.2s ease}
+  #hl{left:0;border-right:2px solid #0DF2CC55}#hr{right:0;border-left:2px solid #0DF2CC55}
+  #gate.abierto #hl{transform:translateX(-100%)}#gate.abierto #hr{transform:translateX(100%)}
+  #gate.cerrado .luz{background:#ff4d6d}.luz{position:absolute;top:4px;left:50%;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:#7CFFB2;box-shadow:0 0 10px currentColor}
+  h2{margin:0;padding:12px 16px;font-size:15px;border-bottom:1px solid var(--line);color:var(--pri)}
+  #lista{max-height:430px;overflow:auto}.it{padding:9px 16px;border-bottom:1px solid #12251f;font-size:13px}
+  .it small{color:var(--mut);display:block}.it.d{border-left:3px solid #ff4d6d}.it.g{border-left:3px solid #7CFFB2}.it.p{border-left:3px solid #FFD84D}
+  .feria{padding:14px 16px;font-size:13px}.feria select,.feria button{width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid var(--line);background:#152321;color:var(--txt);font-family:inherit;font-size:13px}
+  .feria button.pri{background:var(--pri);color:#0D1C19;font-weight:700;border:none;cursor:pointer}.feria button.pel{border-color:#ff6b6b;color:#ff6b6b;cursor:pointer}
+  .feria label{display:flex;gap:8px;line-height:1.4;margin-top:8px;color:#9fc5be}
+  #inicio{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px}#inicio button{padding:11px 22px;border-radius:11px;border:none;background:var(--pri);color:#0D1C19;font-weight:700;font-size:15px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><div><h1 style="display:inline">🚪 Portón inteligente</h1><span class="tag" id="tagFeria" style="display:none">MODO FERIA</span></div><a href="dashboard.html">← Volver</a></header>
+<main>
+  <section class="panel">
+    <canvas id="cam"></canvas>
+    <div id="estado">Listo para iniciar</div><div id="sub">Pulsa «Iniciar cámara». Funciona sin internet (modelos locales).</div>
+    <div id="inicio"><button id="btnIniciar">▶ Iniciar cámara</button></div>
+    <div id="gate" class="cerrado"><div class="luz"></div><div class="hoja" id="hl"></div><div class="hoja" id="hr"></div></div>
+  </section>
+  <aside style="display:flex;flex-direction:column;gap:16px">
+    <div class="panel"><h2>Últimos accesos (en vivo)</h2><div id="lista"><div class="it">Sin movimientos todavía</div></div></div>
+    <div class="panel feria" id="feria" style="display:none">
+      <b style="color:var(--pri)">Modo feria</b>
+      <div style="color:var(--mut);margin-top:6px">🔒 <b>Aviso de privacidad:</b> se calcula un vector numérico de tu rostro (no tu foto), se guarda cifrado, se marca como <i>demo</i> y se borra al cerrar el modo feria.</div>
+      <select id="selVecino"></select>
+      <label><input type="checkbox" id="chkConsent"><span>Consiento que se registre mi rostro para esta demostración.</span></label>
+      <button class="pri" id="btnReg">Registrar rostro del vecino</button>
+      <button class="pel" id="btnBorrar">🗑 Borrar TODOS los datos demo</button>
+      <div id="feriaMsg" style="margin-top:8px;min-height:16px;color:var(--mut)"></div>
+    </div>
+  </aside>
+</main>
+<script src="js/biometria-core.js"></script>
+<script>
+(function () {
+  const B = window.CentinelaBio, $ = (id) => document.getElementById(id);
+  let motor = null, ocupado = false, feriaActiva = false, ultimoId = 0;
+
+  // Sonidos con WebAudio (sin archivos)
+  let ac = null;
+  function tono(frs, dur = 0.14, tipo = 'sine') {
+    try { ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+      frs.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = tipo; o.frequency.value = f; o.connect(g); g.connect(ac.destination);
+        const t = ac.currentTime + i * dur; g.gain.setValueAtTime(0.15, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur); o.start(t); o.stop(t + dur); }); } catch (_) {}
+  }
+  const estado = (t, c, s) => { $('estado').textContent = t; $('estado').className = c || ''; $('sub').textContent = s || ''; };
+  const ui = { mensaje: (t) => { $('sub').textContent = t; }, instruccion: (t) => { $('estado').textContent = t; $('estado').className = 'av'; }, progreso() {} };
+  const hablar = (t) => { try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'es-MX'; speechSynthesis.speak(u); } catch (_) {} };
+
+  async function ciclo() {
+    while (motor && motor.activo) {
+      if (ocupado) { await new Promise(r => setTimeout(r, 300)); continue; }
+      estado('Acércate al portón', '', 'Mira a la cámara…');
+      if (!(await motor.rostroEstable(700, ui, 600000))) continue;
+      // Prueba de vida RÁPIDA: un parpadeo
+      estado('Parpadea una vez', 'av', 'Prueba de vida');
+      const vida = await B.pruebaDeVida(motor, ui, 'rapido');
+      if (!vida.ok) { estado('Prueba de vida no superada', 'no', vida.motivo); tono([220, 180], 0.2, 'square'); await new Promise(r => setTimeout(r, 1800)); continue; }
+      const cap = await B.capturarPlantilla(motor, ui, 3, vida.d0);
+      if (!cap.ok) { estado('No pude ver bien tu rostro', 'no', cap.motivo); await new Promise(r => setTimeout(r, 1500)); continue; }
+      estado('Identificando…', 'av', '');
+      const r = await B.api('/identificar/', { metodo: 'POST', cuerpo: { vector: cap.vector, liveness_ok: true }, token: localStorage.getItem('token') || '' });
+      if (r.estado === 'ERROR') { estado('Error del sistema', 'no', r.mensaje || ''); await new Promise(r => setTimeout(r, 2000)); continue; }
+      if (r.reconocido) {
+        estado(`Acceso concedido: ${r.nombre}, ${r.casa}`, 'ok', 'Bienvenido a la privada');
+        tono([660, 880, 1100]); hablar(`Acceso concedido. Bienvenido ${r.nombre.split(' (')[0]}`);
+        $('gate').className = 'abierto'; await new Promise(res => setTimeout(res, 4500)); $('gate').className = 'cerrado';
+      } else {
+        estado('Visitante no registrado', 'no', `El portón NO abre. Notificado: ${r.notificados || 'caseta'}`);
+        tono([300, 220], 0.25, 'sawtooth'); hablar('Visitante no registrado. Se notificó a la caseta.');
+        await new Promise(res => setTimeout(res, 4500));
+      }
+      cargarBitacora();
+      await new Promise(res => setTimeout(res, 800));
+    }
+  }
+
+  async function cargarBitacora() {
+    const j = await B.api('/bitacora/?limite=15&solo_accesos=1', { token: localStorage.getItem('token') || '' });
+    if (!j.items) return;
+    $('lista').innerHTML = j.items.length ? j.items.map(i => {
+      const cls = i.evento === 'visita' ? 'p' : (i.resultado === 'ok' ? 'g' : 'd');
+      const t = i.evento === 'visita' ? '🕒 Visita pendiente' : (i.resultado === 'ok' ? `✅ ${i.nombre} · ${i.casa}` : '⛔ Visitante no registrado');
+      return `<div class="it ${cls}">${t}<small>${i.fecha}${i.es_demo ? ' · demo' : ''}${i.score != null ? ' · similitud ' + i.score : ''}</small></div>`;
+    }).join('') : '<div class="it">Sin movimientos todavía</div>';
+  }
+
+  $('btnIniciar').onclick = async () => {
+    $('btnIniciar').disabled = true; ac && ac.resume();
+    motor = new B.Motor($('cam'));
+    try { await motor.iniciar(t => estado(t)); $('inicio').style.display = 'none'; ciclo(); }
+    catch (e) { estado('No se pudo iniciar', 'no', e.message); $('btnIniciar').disabled = false; }
+  };
+
+  async function cargarFeria() {
+    const cfg = await B.api('/config/', { token: '' });
+    if (!cfg.modo_feria) return;
+    feriaActiva = true; $('feria').style.display = ''; $('tagFeria').style.display = '';
+    const v = await B.api('/feria/vecinos/', { token: '' });
+    $('selVecino').innerHTML = (v.vecinos || []).map(x => `<option value="${x.id}">${x.nombre} — ${x.casa}${x.registrado ? ' ✔' : ''}</option>`).join('');
+  }
+  $('btnReg').onclick = async () => {
+    if (!$('chkConsent').checked) { $('feriaMsg').textContent = 'Marca el consentimiento primero.'; return; }
+    const id = Number($('selVecino').value); ocupado = true;
+    if (motor) motor.detener(), motor = null;
+    const r = await B.registrar({ titulo: 'Registro demo', guardar: async (vector) => {
+      const x = await B.api('/feria/registrar/', { metodo: 'POST', token: '', cuerpo: { usuario_id: id, vector, consentimiento: true, liveness_ok: true } });
+      return { ok: x.estado === 'OK', mensaje: x.mensaje };
+    } });
+    $('feriaMsg').textContent = r.guardado ? 'Rostro demo registrado ✔' : 'No se guardó nada.';
+    ocupado = false; cargarFeria(); cargarBitacora();
+    $('btnIniciar').disabled = false; $('inicio').style.display = '';
+  };
+  $('btnBorrar').onclick = async () => {
+    if (!confirm('¿Borrar TODOS los registros de demo (rostros, visitas y bitácora demo)?')) return;
+    const x = await B.api('/feria/borrar-demo/', { metodo: 'POST', cuerpo: {}, token: '' });
+    $('feriaMsg').textContent = x.estado === 'OK' ? `Borrado: ${JSON.stringify(x.borrado)}` : (x.mensaje || 'Error');
+    cargarFeria(); cargarBitacora();
+  };
+
+  cargarFeria(); cargarBitacora(); setInterval(cargarBitacora, 2500);
+})();
+</script>
+</body>
+</html>

@@ -491,9 +491,17 @@ async function guardarIncidencia() {
   }
 }
 
+async function guardiaFacial(motivo) {
+  try {
+    if (!window.CentinelaBio) await new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = 'js/biometria-core.js'; sc.onload = ok; sc.onerror = mal; document.head.appendChild(sc) })
+    return await window.CentinelaBio.confirmarAccion(motivo)
+  } catch (_) { return true }   // si la cámara/librería no está disponible no se bloquea una acción que ya existía
+}
+
 async function eliminar(e, id) {
   e.stopPropagation()
   if (!confirm('¿Ocultar este reporte?')) return
+  if (!(await guardiaFacial('Ocultar un reporte'))) return
   await fetch(`${API}/eliminar_incidencia`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/xml', 'Authorization': `Token ${token}` },

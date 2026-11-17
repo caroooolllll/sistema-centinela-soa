@@ -232,7 +232,7 @@
     stateChip.style.display = '';
     statusBar.classList.add('ca-on');
   }
-  const PROV_NOMBRE = { groq: 'Groq', gemini: 'Gemini', claude: 'Claude', local: 'Local', atajo: 'Atajo local', ninguno: '—' };
+  const PROV_NOMBRE = { groq: 'Groq', gemini: 'Gemini', claude: 'Claude', local: 'Local', atajo: 'Atajo local', bitacora: 'Bitácora de accesos', ninguno: '—' };
   function mostrarProveedor(nombre, ms) {
     if (!provEl) return;
     provEl.textContent = `⚡ ${PROV_NOMBRE[nombre] || nombre}${ms != null ? ' · ' + ms + ' ms' : ''}`;

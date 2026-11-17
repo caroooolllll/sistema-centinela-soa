@@ -21,6 +21,7 @@
     'notificaciones.html': ['notificaciones', 'notificacion', 'alertas'],
     'publicaciones.html': ['publicaciones', 'publicacion', 'posts', 'foros', 'foro'],
     'emergencia-contactos.html': ['contactos de emergencia', 'contactos', 'directorio', 'directorio de emergencia'],
+    'porton.html': ['porton', 'porton inteligente', 'puerta', 'acceso facial', 'camara de acceso'],
   };
   const NOMBRES = {
     'dashboard.html': 'el inicio', 'chat.html': 'el chat', 'eventos.html': 'los eventos',
@@ -30,6 +31,7 @@
     'perfil.html': 'tu perfil', 'configuracion.html': 'la configuración',
     'notificaciones.html': 'las notificaciones', 'publicaciones.html': 'las publicaciones',
     'emergencia-contactos.html': 'los contactos de emergencia',
+    'porton.html': 'el portón inteligente',
   };
   const VERBOS_NAV = [
     'abre', 'abrir', 'abreme', 've a', 've al', 'vete a', 'ir a', 'ir al', 'llevame a', 'llevame al',

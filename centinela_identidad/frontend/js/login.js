@@ -93,6 +93,14 @@ async function realizarLogin(email, password) {
             const rolNode = xmlDoc.getElementsByTagName('rol')[0];
             const rol = rolNode ? rolNode.textContent : 'usuario';
 
+            // Segundo factor facial (solo si el vecino registró su rostro)
+            const bioNode = xmlDoc.getElementsByTagName('biometriaPendiente')[0];
+            if (bioNode && bioNode.textContent === 'true') {
+                mostrarMensaje('Verificación facial requerida…', 'exito');
+                const ok = await segundoFactorFacial(token);
+                if (!ok) { mostrarMensaje('No se pudo verificar tu rostro. Acceso denegado.', 'error'); return; }
+            }
+
             mostrarMensaje(`¡Bienvenido, ${nombre}! ✅`, 'exito');
             guardarSesion({ token, userId, nombre, numeroCasa, rol });
 
@@ -194,3 +202,21 @@ window.addEventListener('beforeunload', () => {
         window.Geo.detenerTracking();
     }
 });
+
+
+// ── Segundo factor facial: carga la librería local y verifica con la cámara ──
+async function segundoFactorFacial(token) {
+    await new Promise((ok, mal) => {
+        if (window.CentinelaBio) return ok();
+        const sc = document.createElement('script'); sc.src = 'js/biometria-core.js'; sc.onload = ok; sc.onerror = mal; document.head.appendChild(sc);
+    });
+    const r = await window.CentinelaBio.verificar({ token, origen: 'login', motivo: 'Verifica tu rostro para entrar', titulo: 'Segundo factor' });
+    if (r.ok) return true;
+    // Modo feria: si la cámara falla en plena demo se permite omitir (queda en la bitácora)
+    const cfg = await window.CentinelaBio.api('/config/', { token: '' });
+    if (cfg.modo_feria && confirm('Modo feria: ¿omitir la verificación facial y entrar?')) {
+        const o = await window.CentinelaBio.api('/omitir/', { metodo: 'POST', cuerpo: {}, token });
+        return o.estado === 'OK';
+    }
+    return false;
+}

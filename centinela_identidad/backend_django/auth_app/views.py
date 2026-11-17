@@ -284,10 +284,20 @@ def login(request):
         token = generar_token()
         fecha_expiracion = timezone.now() + timedelta(hours=24)
 
+        # Segundo factor facial: si el vecino tiene rostro registrado, la sesión queda
+        # pendiente hasta que /api/biometria/verificar/ la libere (aditivo: sin rostro, todo igual).
+        tiene_rostro = False
+        try:
+            from django.apps import apps
+            tiene_rostro = apps.get_model('biometria', 'PlantillaFacial').objects.filter(usuario=usuario).exists()
+        except Exception:
+            tiene_rostro = False
+
         Sesion.objects.create(
             usuario=usuario,
             token=token,
-            fecha_expiracion=fecha_expiracion
+            fecha_expiracion=fecha_expiracion,
+            biometria_pendiente=tiene_rostro,
         )
 
         # Registrar actividad de login exitoso
@@ -311,6 +321,7 @@ def login(request):
             'nombre': usuario.nombre_completo,
             'numeroCasa': usuario.casa.numero_casa,
             'rol': rol,
+            'biometriaPendiente': 'true' if tiene_rostro else 'false',
         }, 200)
 
     except Exception as e:
@@ -557,6 +568,7 @@ def actualizar_ubicacion(request):
         sesion = Sesion.objects.select_related('usuario').get(
             token=token,
             activa=True,
+            biometria_pendiente=False,
             fecha_expiracion__gt=timezone.now()
         )
     except Sesion.DoesNotExist:
@@ -729,6 +741,7 @@ def verificar_token(request):
         sesion = Sesion.objects.select_related('usuario__casa').get(
             token=token,
             activa=True,
+            biometria_pendiente=False,
             fecha_expiracion__gt=timezone.now()
         )
 
@@ -780,7 +793,7 @@ def _get_usuario_de_token(request):
     token = auth_header[6:]
     try:
         sesion = Sesion.objects.select_related('usuario__casa').get(
-            token=token, activa=True, fecha_expiracion__gt=timezone.now()
+            token=token, activa=True, biometria_pendiente=False, fecha_expiracion__gt=timezone.now()
         )
         return sesion.usuario, None
     except Sesion.DoesNotExist:

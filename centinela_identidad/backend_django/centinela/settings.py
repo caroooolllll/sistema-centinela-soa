@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'corsheaders',
     'auth_app',
+    'biometria',        # reconocimiento facial con prueba de vida
 ]
 
 MIDDLEWARE = [
