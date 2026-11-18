@@ -151,8 +151,8 @@
     const l = []; for (const g of ['real', 'demo']) for (const [n, v] of Object.entries(r[g])) l.push(`${v.ok ? '✅' : '❌'} ${g}/${n}: ${v.ok ? v.total + ' eventos íntegros' : v.motivo}`);
     $('integ').innerHTML = l.map(esc).join('<br>');
   };
-  $('btnSembrar').onclick = async () => { msg('Cargando datos de demo…'); const r = await post('/demo/sembrar/'); msg('Demo cargada: ' + JSON.stringify(r.creado)); $('chkDemo').checked = true; refrescar(); };
-  $('btnBorrar').onclick = async () => { if (!confirm('¿Borrar TODOS los datos de demo?')) return; const r = await post('/demo/borrar/'); await fetch(`http://${HOST}:9000/api/biometria/feria/borrar-demo/`, { method: 'POST', headers: H(), body: '{}' }).catch(() => {}); msg('Borrado: ' + JSON.stringify(r.borrado)); refrescar(); };
+  $('btnSembrar').onclick = async () => { msg('Cargando datos de demo…'); const r = await post('/demo/sembrar/'); if (r.estado !== 'OK') return msg('⛔ ' + (r.mensaje || 'No se pudo cargar') + ' — inicia sesión como admin o activa el modo feria.'); msg('Demo cargada: ' + JSON.stringify(r.creado)); $('chkDemo').checked = true; refrescar(); };
+  $('btnBorrar').onclick = async () => { if (!confirm('¿Borrar TODOS los datos de demo?')) return; const r = await post('/demo/borrar/'); await fetch(`http://${HOST}:9000/api/biometria/feria/borrar-demo/`, { method: 'POST', headers: H(), body: '{}' }).catch(() => {}); if (r.estado !== 'OK') return msg('⛔ ' + (r.mensaje || 'No se pudo borrar')); msg('Borrado: ' + JSON.stringify(r.borrado)); refrescar(); };
   $('btnRegla').onclick = async () => {
     const r = await post('/reglas/', { nombre: $('rNom').value, evento: $('rEvento').value, campo: $('rCampo').value, operador: $('rOp').value, valor: $('rValor').value, accion: $('rAccion').value, parametro: $('rParam').value });
     msg(r.estado === 'ERROR' ? r.mensaje : 'Regla añadida'); reglas();
